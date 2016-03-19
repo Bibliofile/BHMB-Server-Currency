@@ -514,6 +514,9 @@ var biblio_banks = new MessageBotExtension('biblio_banks');
 				var accounts = localStorage.getItem(key);
 				//Just in case, default to an empty object.
 				accounts = (accounts === null) ? {} : JSON.parse(accounts);
+				if (typeof accounts != 'object' || accounts !== null) {
+					accounts = {};
+				}
 				var newAccounts = {};
 
 				//Loop through the old accounts, change the format {BIBLIOPHILE: 1} to {BIBLIOPHILE: {balance: 1}}
