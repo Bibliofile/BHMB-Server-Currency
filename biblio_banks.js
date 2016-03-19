@@ -19,7 +19,7 @@ var biblio_banks = new MessageBotExtension('biblio_banks');
 	this.version = '3';
 	//Debug
 	//this.bot.devMode = true;
-	this.debug = true;
+	//this.debug = true;
 	
 	
 	//Libraries
