@@ -319,12 +319,12 @@ var biblio_banks = new MessageBotExtension('biblio_banks');
 		var ammount = parseInt(parts[1]);
 		var name = parts[2];
 		
-		if (!this.accounts.hasOwnProperty(name) && name != 'SERVER') {
+		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['add']);
 			return;
 		}
 		
-		//Newly make account
+		//Newly made account
 		if (!this.accounts.hasOwnProperty(name)) {
 			this.accounts[name] = {};
 			this.accounts[name].balance = 0;
