@@ -13,7 +13,7 @@
 
 'use strict';
 
-var biblio_banks = new MessageBotExtension('biblio_banks');
+var biblio_banks = MessageBotExtension('biblio_banks');
 
 (function() {
 	this.version = '3';
