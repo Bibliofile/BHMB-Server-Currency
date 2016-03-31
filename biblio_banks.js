@@ -271,7 +271,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 			this.accounts[data.name].balance = 0;
 		}
 
-		var oldAmmountFrom = this.accounts[data.name] || 0; //NaN fix
+		var oldAmmountFrom = this.accounts[data.name].balance || 0; //NaN fix
 
 		if (oldAmmountFrom < ammount) {
 			this.sendHelper(this.messages.error_funds,
