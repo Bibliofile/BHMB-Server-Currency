@@ -302,6 +302,8 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 
 		this.accounts[name].balance = oldAmmountTo + ammount;
 
+		oldAmmountFrom = this.accounts[data.name].balance || 0;
+
 		this.accounts[data.name].balance = oldAmmountFrom - ammount;
 
 		this.sendHelper(this.messages.transfer,
