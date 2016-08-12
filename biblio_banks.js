@@ -43,6 +43,16 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 	this.installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.0.0/awesomplete.min.js', 'script', 'src');
 	this.installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.0.0/awesomplete.min.css', 'link', 'href');
 	this.lazyLoad = function() {
+		function merge(a, b) {
+			var hash = {}, i;
+			for (i=0; i<a.length; i++) {
+				hash[a[i]] = true;
+			} 
+			for (i=0; i<b.length; i++) {
+				hash[b[i]] = true;
+			} 
+			return Object.keys(hash);
+		}
 		if (typeof Awesomplete == 'function' && Object.keys(biblio_banks.core.players).length) {
 			if (this.debug) { console.log('Lazy Load');}
 			this.awesomplete = new Awesomplete(document.getElementById('biblio_banks_input'), {
@@ -52,7 +62,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 			});
 
 			setTimeout(function() {
-				var tmpList = Object.keys(biblio_banks.core.players);
+				var tmpList = merge(Object.keys(biblio_banks.core.players), Object.keys(biblio_banks.accounts));
 				tmpList.push('SERVER');
 				biblio_banks.awesomplete.list = tmpList;
 				document.getElementById('biblio_banks_input').removeAttribute('disabled');
@@ -96,9 +106,10 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		if (this.debug) { console.log('accountInfo');}
 		var name = document.getElementById('biblio_banks_input').value;
 		var container = document.getElementById('biblio_banks_user');
-		if (biblio_banks.core.players.hasOwnProperty(name)) {
+		if (biblio_banks.core.players.hasOwnProperty(name) || biblio_banks.accounts.hasOwnProperty(name)) {
 			var ammount = (biblio_banks.accounts.hasOwnProperty(name)) ? this.accounts[name].balance : 0;
-			var safeName = biblio_banks.bot.stripHTML(name), safeCurrency = biblio_banks.bot.stripHTML(biblio_banks.currency);
+			var safeName = biblio_banks.bot.stripHTML(name), 
+			    safeCurrency = biblio_banks.bot.stripHTML(biblio_banks.currency);
 			var h = '<h4 style="margin-top: 5px;">' + safeName + '\'s Account:</h4>';
 			h += '<p>' + safeName + ' has ' + ammount + ' ' + safeCurrency + '</p>';
 			h += '<p><label for="biblio_banks_banker">Banker: </label><input type="checkbox" id="biblio_banks_banker"';
@@ -132,7 +143,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var num = prompt('How much ' + this.currency + ' would you like to add to ' + name + '\'s account?');
 		if (this.accounts.hasOwnProperty(name)) {
 			this.accounts[name].balance += (isNaN(parseInt(num))) ? 0 : parseInt(num);
-		} else if (biblio_banks.core.players.hasOwnProperty(name)) {
+		} else if (biblio_banks.core.players.hasOwnProperty(name) || biblio_banks.accounts.hasOwnProperty(name)) {
 			this.accounts[name] = {};
 			this.accounts[name].balance = (isNaN(parseInt(num))) ? 0 : parseInt(num);
 		}
@@ -144,7 +155,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var num = prompt('How much ' + this.currency + ' would you like to remove from ' + name + '\'s account?');
 		if (this.accounts.hasOwnProperty(name)) {
 			this.accounts[name].balance -= (isNaN(parseInt(num))) ? 0 : parseInt(num);
-		} else if (this.core.players.hasOwnProperty(name)) {
+		} else if (this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) {
 			this.accounts[name].balance = (isNaN(parseInt(num))) ? 0 : -1 * parseInt(num);
 		}
 		this.accountInfo();
@@ -244,7 +255,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 			name = parts[3];
 		}
 
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['check']);
 			return;
 		}
@@ -281,7 +292,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		}
 
 		//Check if reciever account can exist, if it doesn't exist and can exist then create it.
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['transfer']);
 			return;
 		}
@@ -321,7 +332,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var ammount = parseInt(parts[1]);
 		var name = parts[2];
 
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['add']);
 			return;
 		}
@@ -354,7 +365,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var ammount = parseInt(parts[1]);
 		var name = parts[2];
 
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
 			//No account
 			return;
 		}
@@ -377,7 +388,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var ammount = parseInt(parts[1]);
 		var name = parts[2];
 
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
 			//No account
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['adddaily']);
 			return;
@@ -409,7 +420,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
 		var ammount = parseInt(parts[1]);
 		var name = parts[2];
 
-		if (!this.core.players.hasOwnProperty(name) && name != 'SERVER') {
+		if (!this.accounts.hasOwnProperty(name) && name != 'SERVER') {
 			this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['remove']);
 		}
 
