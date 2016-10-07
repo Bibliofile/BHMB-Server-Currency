@@ -15,604 +15,632 @@
 
 var biblio_banks = MessageBotExtension('biblio_banks');
 
-(function() {
-    this.version = '3';
-    //Debug
-    //this.bot.devMode = true;
-    //this.debug = true;
+//Migration
+(function(storage) {
+    //Yes, no break statements.
+    //jshint -W086
+    switch (storage.getObject('biblio_banks_migration', 0, false)) {
+        case 0:
+            storage.clearNamespace('biblio_banks_version');
+            //Fix any NaN issues from older versions of the extension
+            Object.keys(localStorage).forEach(function(key) {
+                if (!key.startsWith('biblio_banks_accounts')) {
+                    return;
+                }
 
-
-    //Libraries
-    this.installLib = function(path, tag, property) {
-        if (this.debug) { console.log('installLib', path, tag, property);}
-        var list = document.getElementsByTagName(tag);
-        var i = list.length;
-        while (i--) {
-            if (list[i][property] == path) {
-                return;
-            }
-        }
-        var s = document.createElement(tag);
-        s[property] = path;
-        if (tag == 'link') {
-            s.rel = 'stylesheet';
-        }
-
-        document.head.appendChild(s);
-    };
-    this.installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.0.0/awesomplete.min.js', 'script', 'src');
-    this.installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.0.0/awesomplete.min.css', 'link', 'href');
-    this.lazyLoad = function() {
-        function merge(a, b) {
-            var hash = {}, i;
-            for (i=0; i<a.length; i++) {
-                hash[a[i]] = true;
-            }
-            for (i=0; i<b.length; i++) {
-                hash[b[i]] = true;
-            }
-            return Object.keys(hash);
-        }
-        if (typeof Awesomplete == 'function' && Object.keys(biblio_banks.core.players).length) {
-            if (this.debug) { console.log('Lazy Load');}
-            this.awesomplete = new Awesomplete(document.getElementById('biblio_banks_input'), {
-                minChars: 1,
-                maxItems: 8,
-                autoFirst: false
+                var accounts = storage.getObject(key, {}, false); //Fake global as we have the full key.
+                Object.keys(accounts).forEach(function(name) {
+                    accounts[name].balance = accounts[name].balance || 0;
+                });
+                storage.set(key, accounts, false);
             });
+            //Fix any messages with ammount misspelling
+            Object.keys(localStorage).forEach(function(key) {
+                if (!key.startsWith('biblio_banks_messages')) {
+                    return;
+                }
 
-            setTimeout(function() {
-                var tmpList = merge(Object.keys(biblio_banks.core.players), Object.keys(biblio_banks.accounts));
-                tmpList.push('SERVER');
-                biblio_banks.awesomplete.list = tmpList;
-                document.getElementById('biblio_banks_input').removeAttribute('disabled');
-                document.getElementById('biblio_banks_input').placeholder = 'Search by name';
-            }, 1000);
-        } else {
-            setTimeout(this.lazyLoad.bind(this), 1000);
-        }
+                var messages = storage.getObject(key, {}, false);
+                Object.keys(messages).forEach(function(id) {
+                    messages[id] = messages[id].replace(/ammount/g, 'amount');
+                });
+                storage.set(key, messages, false);
+            });
+    }
+    //jshint +W086
+    storage.set('biblio_banks_migration', 1);
+}(biblio_banks.storage));
+
+
+(function(ex) {
+    ex.debug = false;
+    ex.setAutoLaunch(true);
+    ex.uninstall = function() {
+        //Remove tab
+        ex.ui.removeTab(ex.tab);
+
+        //Remove listeners
+        ex.hook.remove('world.command', checkCommands);
+
+        //Remove stored bank
+        ex.storage.removeNamespace(ex.id);
     };
 
-    //Uninstall
-    this.uninstall = function() {
-        //Unsafe to use "this" here.
-        biblio_banks.removeServerListener('checkCommands');
-        biblio_banks.removeBeforeSendListener('checkCommands');
-        Object.keys(localStorage).forEach(function(key) {
-            if (key.indexOf('biblio_banks_') === 0) {
-                localStorage.removeItem(key);
+    function defaultHelper(obj, defaults) {
+        Object.keys(defaults).forEach(function(key) {
+            if (!obj.hasOwnProperty(key)) {
+                obj[key] = defaults[key];
             }
         });
+    }
+
+    ex.tab = ex.ui.addTab('Banking');
+
+    ex.accounts = ex.storage.getObject('biblio_banks_accounts', {});
+    if (!ex.accounts.SERVER) {
+        ex.accounts.SERVER = {balance: 0};
+    }
+    ex.limit = ex.storage.getObject('biblio_banks_limit', 10000000);
+    ex.bankers = ex.storage.getObject('biblio_banks_bankers', []);
+    ex.currency = ex.storage.getString('biblio_banks_currency', 'Server Coin');
+
+    ex.perms = ex.storage.getObject('biblio_banks_perms', {});
+    defaultHelper(ex.perms, {
+        check: 'All',
+        add: 'AdminBanker',
+        silent: 'AdminBanker',
+        daily: 'AdminBanker',
+        online: 'AdminBanker',
+        remove: 'AdminBanker',
+        banker: 'Admin',
+    });
+    ex.messages = ex.storage.getObject('biblio_banks_messages', {});
+    defaultHelper(ex.messages, {
+        check: '{{Name}} currently has {{amount}} {{currency}}.',
+        transfer: 'Transferred {{amount}} {{currency}} from {{From}} to {{To}}.',
+        add: 'Added {{amount}} {{currency}} to {{Name}}.',
+        online: 'Everyone online has recieved {{amount}} {{currency}}!',
+        daily_yes: 'Added daily reward of {{currency}} to {{Name}}.',
+        daily_no: '{{Name}} has already recieved their daily reward.',
+        remove: 'Removed {{amount}} {{currency}} from {{Name}}.',
+        banker_yes: '{{Name}} has been added to the banker list.',
+        banker_on_list_already: '{{Name}} was already on the banker list.',
+        banker_no: '{{Name}} has been removed from the banker list.',
+        banker_not_on_list: '{{Name}} was not on the banker list.',
+        error_no_account: 'Error: unable to {{command}}, the specified account does not exist.',
+        error_limit_reached: 'Error: {{Name}} can\'t have more {{currency}} added to their account.',
+        error_funds: 'Error: {{Name}} does not have enough {{currency}} to transfer funds.',
+    });
+
+    var account = {
+        canExist: function(name) {
+            var n = name.toLocaleUpperCase();
+            return ex.bot.world.players.hasOwnProperty(n) || ex.accounts.hasOwnProperty(n);
+        },
+        createIfDoesNotExist: function(name) {
+            var n = name.toLocaleUpperCase();
+            if (!ex.accounts[n]) {
+                ex.accounts[n] = {balance: 0};
+            }
+        },
+    };
+    account.getBalance = function(name) {
+        //Assume account exists.
+        return ex.accounts[name.toLocaleUpperCase()].balance;
+    };
+    account.setBalance = function(name, balance) {
+        //Assume account exists.
+        ex.accounts[name.toLocaleUpperCase()].balance = balance;
+    };
+    account.deposit = function(name, amount) {
+        //Assume account exists.
+        account.setBalance(name, account.getBalance(name) + amount);
+    };
+    account.withdraw = function(name, amount) {
+        //Assume account exists.
+        account.deposit(name, -amount);
+    };
+    account.transfer = function(from, to, amount) {
+        account.withdraw(from, amount);
+        account.deposit(to, amount);
     };
 
-    ///Display functions
-    this.showAll = function() {
-        if (this.debug) { console.log('showAll');}
+    function merge(a, b) {
+        var hash = {}, i;
+        for (i=0; i<a.length; i++) {
+            hash[a[i]] = true;
+        }
+        for (i=0; i<b.length; i++) {
+            hash[b[i]] = true;
+        }
+        return Object.keys(hash);
+    }
+
+    function stripHTML(html) {
+        return html
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/'/g, '&apos;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function installLib(path, tag, prop) {
+        return new Promise(function(resolve) {
+            if (document.querySelector(tag + '[' + prop + '="' + path + '"]')) {
+                return resolve();
+            }
+
+            var s = document.createElement(tag);
+            s[prop] = path;
+            if (tag == 'link') {
+                s.rel = 'stylesheet';
+            }
+
+            //IE -.- Otherwise just listen for s.onload & don't check readyState
+            s.onreadystatechange = s.onload = function() {
+                if (!s.readyState || /loaded|complete/.test(s.readyState)) {
+                    return resolve();
+                }
+            };
+
+            document.head.appendChild(s);
+        });
+    }
+
+    installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.css', 'link', 'href');
+    installLib('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.js', 'script', 'src')
+        .then(ex.api.getLogs)
+        .then(function() {
+            //We just care that the logs were loaded, not about what was in them.
+            if (ex.debug) console.log("Loaded!");
+
+            var input = document.getElementById('biblio_banks_input');
+
+            var players = merge(Object.keys(ex.bot.world.players), ex.accounts);
+            if (!players.includes('SERVER')) {
+                players.push('SERVER');
+            }
+
+            ex.awesomplete = new Awesomplete(input, {
+                minChars: 1,
+                maxItems: 8,
+                autoFirst: false,
+                list: players
+            });
+
+            input.disabled = false;
+            input.placeholder = 'Enter a name...';
+        });
+
+    //Display functions
+    ex.showAll = function() {
+        if (ex.debug) { console.log('showAll');}
+
         var html = '<h4 style="margin-top:5px;">Bankers:</h4><ul style="padding-left: 1.5em;">';
-        this.bankers.forEach(function(banker) {
-            html += '<li>' + this.bot.stripHTML(banker);
-        }.bind(this));
+        ex.bankers.forEach(function(banker) {
+            html += '<li>' + stripHTML(banker);
+        });
 
         html += '</ul><h4>All accounts:</h4><ul style="padding-left: 1.5em;">';
 
-        Object.keys(this.accounts).forEach(function(key) {
-            html += '<li' + ((this.bankers.indexOf(key) != -1) ? ' style="color:#182B73">' : '>') +
-                this.bot.stripHTML(key) + ' has ' + this.accounts[key].balance + ' ' + this.currency;
-        }.bind(this));
+        Object.keys(ex.accounts).forEach(function(key) {
+            html += '<li' + ((ex.bankers.includes(key)) ? ' style="color:#182B73">' : '>') +
+                stripHTML(key) + ' has ' + account.getBalance(key) + ' ' + stripHTML(ex.currency);
+        });
         html += '</ul>';
         document.getElementById('biblio_banks_user').innerHTML = html;
     };
-    this.accountInfo = function() {
-        if (this.debug) { console.log('accountInfo');}
+
+    ex.accountInfo = function() {
+        if (ex.debug) { console.log('accountInfo');}
+
         var name = document.getElementById('biblio_banks_input').value;
         var container = document.getElementById('biblio_banks_user');
-        if (biblio_banks.core.players.hasOwnProperty(name) || biblio_banks.accounts.hasOwnProperty(name)) {
-            var ammount = (biblio_banks.accounts.hasOwnProperty(name)) ? this.accounts[name].balance : 0;
-            var safeName = biblio_banks.bot.stripHTML(name),
-                safeCurrency = biblio_banks.bot.stripHTML(biblio_banks.currency);
-            var h = '<h4 style="margin-top: 5px;">' + safeName + '\'s Account:</h4>';
-            h += '<p>' + safeName + ' has ' + ammount + ' ' + safeCurrency + '</p>';
-            h += '<p><label for="biblio_banks_banker">Banker: </label><input type="checkbox" id="biblio_banks_banker"';
-                h += ' onchange="biblio_banks.setBanker.call(biblio_banks, \'' + name.replace(/'/g, '\\\'') + '\', this.checked)"';
-                h += (biblio_banks.bankers.indexOf(name) != -1) ? ' checked="checked"></p>' : '></p>';
-            h += '<p><button onclick="biblio_banks.add.call(biblio_banks,\'' + name.replace(/'/g, '\\\'') + '\')">Add ' + safeCurrency + '</button><button onclick="biblio_banks.remove.call(biblio_banks,\'' + name.replace(/'/g, '\\\'') + '\')">Remove ' + safeCurrency + '</button></p>';
-            container.innerHTML = h;
+
+        if (account.canExist(name)) {
+            account.createIfDoesNotExist(name);
+            var amount = account.getBalance(name);
+            var safeName = stripHTML(name);
+            var safeCurrency = stripHTML(ex.currency);
+
+            var html = '<h4 style="margin-top: 5px;">' + safeName + '\'s Account:</h4>';
+
+            html += '<p>' + safeName + ' has ' + amount + ' ' + safeCurrency + '</p>';
+
+            html += '<p><label for="biblio_banks_banker">Banker: </label><input type="checkbox" id="biblio_banks_banker"';
+                html += (ex.bankers.includes(name)) ? ' checked="checked"></p>' : '></p>';
+
+            container.innerHTML = html;
+            container.querySelector('input[type=checkbox]').addEventListener('change', function() {
+                ex.setBanker(safeName, container.querySelector('input[type=checkbox]').checked);
+            });
         }
     };
 
     //Group functions
-    this.setBanker = function(name, promoted) {
-        if (this.debug) { console.log('setBanker', name, promoted);}
+    ex.setBanker = function(name, promoted) {
+        if (ex.debug) { console.log('setBanker', name, promoted);}
         if (promoted) {
-            if (this.bankers.indexOf(name) == -1) {
-                this.bankers.push(name);
+            if (!ex.bankers.includes(name)) {
+                ex.bankers.push(name);
             }
         } else {
-            var i = this.bankers.indexOf(name);
-            if (i != -1) {
-                this.bankers.splice(i, 1);
+            if (ex.bankers.includes(name)) {
+                ex.bankers.splice(ex.bankers.indexOf(name), 1);
             }
         }
-
-        localStorage.setItem('biblio_banks_bankers' + window.worldId, JSON.stringify(this.bankers));
+        ex.save();
     };
 
-    //Admin functions
-    this.add = function(name) {
-        if (this.debug) { console.log('add', name);}
-        var num = prompt('How much ' + this.currency + ' would you like to add to ' + name + '\'s account?');
-        if (this.accounts.hasOwnProperty(name)) {
-            this.accounts[name].balance += (isNaN(parseInt(num))) ? 0 : parseInt(num);
-        } else if (biblio_banks.core.players.hasOwnProperty(name) || biblio_banks.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = (isNaN(parseInt(num))) ? 0 : parseInt(num);
-        }
-        this.accountInfo();
-        this.save();
-    };
-    this.remove = function(name) {
-        if (this.debug) { console.log('remove', name);}
-        var num = prompt('How much ' + this.currency + ' would you like to remove from ' + name + '\'s account?');
-        if (this.accounts.hasOwnProperty(name)) {
-            this.accounts[name].balance -= (isNaN(parseInt(num))) ? 0 : parseInt(num);
-        } else if (this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) {
-            this.accounts[name].balance = (isNaN(parseInt(num))) ? 0 : -1 * parseInt(num);
-        }
-        this.accountInfo();
-        this.save();
-    };
+    ex.save = function() {
+        if (ex.debug) { console.log('saving...');}
+        ex.currency = document.getElementById('biblio_banks_currency').value;
+        ex.limit = parseInt(document.getElementById('biblio_banks_limit').value);
 
-    //Saving functions
-    this.save = function() {
-        if (this.debug) { console.log('saving...');}
-        this.currency = document.getElementById('biblio_banks_currency').value;
-        this.limit = parseInt(document.getElementById('biblio_banks_limit').value);
-
-        var keys = Object.keys(this.messages);
-        this.messages = {};
+        var keys = Object.keys(ex.messages);
+        ex.messages = {};
         keys.forEach(function(key) {
-            this.messages[key] = this.settingsTab.querySelector('input[data-msg-key="' + key + '"]').value;
-        }.bind(this));
+            ex.messages[key] = ex.tab.querySelector('#biblio_banks_tc input[data-msg-key="' + key + '"]').value;
+        });
 
-        keys = Object.keys(this.perms);
-        this.perms = {};
+        keys = Object.keys(ex.perms);
+        ex.perms = {};
         keys.forEach(function(key) {
-            this.perms[key] = this.settingsTab.querySelector('select[data-perm="' + key + '"]').value;
-        }.bind(this));
+            ex.perms[key] = ex.tab.querySelector('#biblio_banks_tc select[data-perm="' + key + '"]').value;
+        }.bind(ex));
 
-
-        localStorage.setItem('biblio_banks_bankers' + window.worldId, JSON.stringify(this.bankers));
-        localStorage.setItem('biblio_banks_accounts' + window.worldId, JSON.stringify(this.accounts));
-        localStorage.setItem('biblio_banks_currency' + window.worldId, this.currency);
-        localStorage.setItem('biblio_banks_limit' + window.worldId, this.limit);
-        localStorage.setItem('biblio_banks_messages' + window.worldId, JSON.stringify(this.messages));
-        localStorage.setItem('biblio_banks_perms' + window.worldId, JSON.stringify(this.perms));
+        ex.storage.set('biblio_banks_bankers', ex.bankers);
+        ex.storage.set('biblio_banks_accounts', ex.accounts);
+        ex.storage.set('biblio_banks_currency', ex.currency);
+        ex.storage.set('biblio_banks_limit', ex.limit);
+        ex.storage.set('biblio_banks_messages', ex.messages);
+        ex.storage.set('biblio_banks_perms', ex.perms);
     };
 
-    //Functions to handle chat types
-    this.commandCheck = function(tmpdata) {
-        if (this.debug) { console.log('ChatMsg', tmpdata);}
+    var listeners = {};
+    function addListener(command, closure) {
+        listeners[command.toLocaleUpperCase()] = closure;
+    }
+    function checkCommands(name, command, args) {
+        if (listeners[command.toLocaleUpperCase()]) {
+            listeners[command.toLocaleUpperCase()](name, args);
+            ex.save();
+        }
+    }
+    ex.hook.listen('world.command', checkCommands);
 
-        function privilageCheck(ext, command, name) {
-            if (name == 'SERVER') {
-                return true;
-            }
-            var target = ext.perms[command];
-
-            if (ext.bot.checkGroup(target, name)) {
-                return true;
-            } else if (target == 'AdminBanker') {
-                if (ext.bot.checkGroup('Admin', name) || ext.bankers.indexOf(name) != -1) {
-                    return true;
-                }
-            } else if (target == 'Banker') {
-                return ext.bankers.indexOf(name) != -1;
-            }
-            return false;
+    function privilageCheck(name, command) {
+        if (name == 'SERVER') {
+            return true;
         }
 
-        var data = (typeof tmpdata == 'string') ? {name: 'SERVER', message: tmpdata} : tmpdata;
-        data.message = data.message.toLocaleUpperCase();
+        var target = ex.perms[command];
 
-        if (/^\/CHECK ?$/.test(data.message)) {
-            if (this.debug) { console.log('Check no privilage');}
-            this.checkCmd(data);
-        } else if (/^\/TRANSFER [0-9]+ .{3,}/.test(data.message)) {
-            if (this.debug) { console.log('Transfer');}
-            this.transferCmd(data);
-        }
-
-        if (/^\/ADD [0-9]+ .{3,}/.test(data.message) && privilageCheck(this, 'add', data.name)) {
-            if (this.debug) { console.log('Add');}
-            this.addCmd(data);
-        } else if (/^\/REMOVE [0-9]+ .{3,}/.test(data.message) && privilageCheck(this, 'remove', data.name)) {
-            if (this.debug) { console.log('Remove');}
-            this.removeCmd(data);
-        } else if (/^\/ADDSILENT [0-9]+ .{3,}/.test(data.message) && privilageCheck(this, 'silent', data.name)) {
-            if (this.debug) { console.log('AddSilent');}
-            this.addSilentCmd(data);
-        } else if (/^\/ADDONLINE [0-9]+/.test(data.message) && privilageCheck(this, 'online', data.name)) {
-            if (this.debug) { console.log('AddOnline');}
-            this.onlineCmd(data);
-        } else if (/^\/ADDDAILY [0-9]+ .{3,}/.test(data.message) && privilageCheck(this, 'daily', data.name)) {
-            if (this.debug) { console.log('AddDaily');}
-            this.addDailyCmd(data);
-        } else if (/^\/(UN)?BANKER .{3,}/.test(data.message) && privilageCheck(this, 'banker', data.name)) {
-            if (this.debug) { console.log('(Un)Banker');}
-            this.bankerCmd(data);
-        } else if (/^\/CHECK .{3,16}/.test(data.message) && privilageCheck(this, 'check', data.name)) {
-            if (this.debug) { console.log('Check Privilaged');}
-            this.checkCmd(data);
-        }
-        //As this is bound both as a beforesend listener and a trigger listener, we need to return the original message we were passed.
-        return tmpdata;
-    };
-    this.checkCmd = function(data) {
-        var name = data.name;
-
-        var parts = data.message.split(/(\/CHECK)( |$)(.{3,})?/);
-        if (typeof parts[3] == 'string') {
-            name = parts[3];
-        }
-
-        if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
-            this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['check']);
-            return;
-        }
-
-        if (!this.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = 0;
-        }
-
-        var ammount = this.accounts[name].balance || 0;
-
-        this.sendHelper(this.messages.check,
-                        ['{{NAME}}', '{{Name}}', '{{name}}', '{{ammount}}', '{{currency}}'],
-                        [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), ammount, this.currency]);
-    };
-    this.transferCmd = function(data) {
-        var parts = data.message.split(/(?:\/TRANSFER)(?: )([0-9]+)(?: )(.{3,})/);
-        var ammount = parseInt(parts[1]);
-        var name = parts[2];
-
-        //Trasfer from new account
-        if (!this.accounts.hasOwnProperty(data.name)) {
-            this.accounts[data.name] = {};
-            this.accounts[data.name].balance = 0;
-        }
-
-        var oldAmmountFrom = this.accounts[data.name].balance || 0; //NaN fix
-
-        if (oldAmmountFrom < ammount) {
-            this.sendHelper(this.messages.error_funds,
-                          ['{{NAME}}', '{{Name}}', '{{name}}', '{{currency}}'],
-                          [data.name, data.name[0] + data.name.substr(1).toLocaleLowerCase(), data.name.toLocaleLowerCase(), this.currency]);
-            return;
-        }
-
-        //Check if reciever account can exist, if it doesn't exist and can exist then create it.
-        if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
-            this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['transfer']);
-            return;
-        }
-        if (!this.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = 0;
-        }
-
-        var oldAmmountTo = this.accounts[name].balance || 0; //NaN fix
-
-        //Handle ammounts over the limit
-        if (oldAmmountTo + ammount > this.limit) {
-            this.sendHelper(this.messages.error_limit_reached,
-                          ['{{NAME}}', '{{Name}}', '{{name}}', '{{currency}}'],
-                          [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), this.currency]);
-            return;
-        }
-
-        this.accounts[name].balance = oldAmmountTo + ammount;
-
-        oldAmmountFrom = this.accounts[data.name].balance || 0;
-
-        this.accounts[data.name].balance = oldAmmountFrom - ammount;
-
-        this.sendHelper(this.messages.transfer,
-                      ['{{FROM}}', '{{From}}', '{{from}}',
-                        '{{TO}}', '{{To}}', '{{to}}',
-                        '{{ammount}}', '{{currency}}'],
-                      [data.name, data.name[0] + data.name.substr(1).toLocaleLowerCase(), data.name.toLocaleLowerCase(),
-                       name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(),
-                       ammount, this.currency]);
-
-        this.save();
-    };
-    this.addCmd = function(data) {
-        var parts = data.message.split(/(?:\/ADD)(?: )([0-9]+)(?: )(.{3,})/);
-        var ammount = parseInt(parts[1]);
-        var name = parts[2];
-
-        if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
-            this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['add']);
-            return;
-        }
-
-        //Newly made account
-        if (!this.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = 0;
-        }
-
-        var oldAmmount = this.accounts[name].balance || 0;
-
-        if (oldAmmount + ammount > this.limit) {
-            this.sendHelper(this.messages.error_limit_reached,
-                          ['{{NAME}}', '{{Name}}', '{{name}}', '{{currency}}'],
-                          [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), this.currency]);
-            return;
-        }
-
-        this.accounts[name].balance = oldAmmount + ammount;
-
-        this.save();
-
-        this.sendHelper(this.messages.add,
-                      ['{{NAME}}', '{{Name}}', '{{name}}', '{{ammount}}', '{{currency}}'],
-                      [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), ammount, this.currency]);
-    };
-    this.addSilentCmd = function(data) {
-        var parts = data.message.split(/(?:\/ADDSILENT)(?: )([0-9]+)(?: )(.{3,})/);
-        var ammount = parseInt(parts[1]);
-        var name = parts[2];
-
-        if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
-            //No account
-            return;
-        }
-
-        //Newly made account
-        if (!this.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = 0;
-        }
-        //Fix NaN ammounts
-        var oldAmmount = this.accounts[name].balance || 0;
-
-        if (oldAmmount + ammount <= this.limit) {
-            this.accounts[name].balance = oldAmmount + ammount;
-            this.save();
-        }
-    };
-    this.addDailyCmd = function(data) {
-        var parts = data.message.split(/(?:\/ADDDAILY)(?: )([0-9]+)(?: )(.{3,})/);
-        var ammount = parseInt(parts[1]);
-        var name = parts[2];
-
-        if (!(this.core.players.hasOwnProperty(name) || this.accounts.hasOwnProperty(name)) && name != 'SERVER') {
-            //No account
-            this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['adddaily']);
-            return;
-        }
-
-        //Newly made account
-        if (!this.accounts.hasOwnProperty(name)) {
-            this.accounts[name] = {};
-            this.accounts[name].balance = 0;
-        }
-        //Fix NaN ammounts
-        var oldAmmount = this.accounts[name].balance || 0;
-        var last_daily_add = this.accounts[name].last_daily_award || 0;
-
-        if (last_daily_add / 1000 / 60 / 60 / 24 < Date.now() / 1000 / 60 / 60 / 24 - 1) {
-            this.accounts[name].balance = oldAmmount + ammount;
-            this.accounts[name].last_daily_award = Date.now();
-            this.sendHelper(this.messages.daily_yes,
-                      ['{{NAME}}', '{{Name}}', '{{name}}', '{{ammount}}', '{{currency}}'],
-                      [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), ammount, this.currency]);
-        } else {
-            this.sendHelper(this.messages.daily_no,
-                      ['{{NAME}}', '{{Name}}', '{{name}}', '{{ammount}}', '{{currency}}'],
-                      [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), ammount, this.currency]);
-        }
-    };
-    this.removeCmd = function(data) {
-        var parts = data.message.split(/(?:\/REMOVE)(?: )([0-9]+)(?: )(.{3,})/);
-        var ammount = parseInt(parts[1]);
-        var name = parts[2];
-
-        if (!this.accounts.hasOwnProperty(name) && name != 'SERVER') {
-            this.sendHelper(this.messages.error_no_account, ['{{command}}'], ['remove']);
-        }
-
-        var oldAmmount = (this.accounts.hasOwnProperty(name)) ? this.accounts[name].balance : 0;
-        //Fix NaN ammounts
-        oldAmmount = oldAmmount || 0;
-
-        if (oldAmmount - ammount > 0) { //Silently disallow a negative balance
-            this.accounts[name] = this.accounts[name] || {}; //New account?
-            this.accounts[name].balance = oldAmmount - ammount;
-            this.save();
-
-            this.sendHelper(this.messages.remove,
-                          ['{{NAME}}', '{{Name}}', '{{name}}', '{{ammount}}', '{{currency}}'],
-                          [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase(), ammount, this.currency]);
-        }
-    };
-    this.onlineCmd = function(data) {
-        var parts = data.message.split(/(?:\/ADDONLINE )([0-9]+)/);
-        var ammount = parseInt(parts[1]);
-
-        this.core.online.forEach(function(player) {
-            this.accounts[player] = this.accounts[player] || {}; //New account?
-            var oldAmmount = this.accounts[player].balance || 0;
-            if (oldAmmount + ammount <= this.limit) {
-                this.accounts[player].balance = oldAmmount + ammount;
-            }
-            //Silently fall through on limit errors here, otherwise potential spam.
-        }.bind(this));
-        this.save();
-
-        this.sendHelper(this.messages.online,
-                      ['{{ammount}}', '{{currency}}'],
-                      [ammount, this.currency]);
-    };
-    this.bankerCmd = function(data) {
-        var privilage = data.message.indexOf('/B') === 0;
-        var name = data.message.split(/(?:\/(?:UN)?BANKER)(?: )(.{3,})/)[1];
-
-        if (privilage) {
-            //Adding to banker list
-            if (this.bankers.indexOf(name) == -1) {
-                this.bankers.push(name);
-                this.save();
-                this.sendHelper(this.messages.banker_yes,
-                               ['{{NAME}}', '{{Name}}', '{{name}}'],
-                               [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase()]);
-                return;
-            }
-
-            this.sendHelper(this.messages.banker_on_list_already,
-                           ['{{NAME}}', '{{Name}}', '{{name}}'],
-                           [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase()]);
-            return;
-        }
-
-        var bankerIndex = this.bankers.indexOf(name);
-        if (bankerIndex == -1) {
-            this.sendHelper(this.messages.banker_not_on_list,
-                           ['{{NAME}}', '{{Name}}', '{{name}}'],
-                           [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase()]);
-            return;
-        }
-
-        this.bankers.splice(bankerIndex, 1);
-        this.save();
-
-        this.sendHelper(this.messages.banker_no,
-                       ['{{NAME}}', '{{Name}}', '{{name}}'],
-                       [name, name[0] + name.substr(1).toLocaleLowerCase(), name.toLocaleLowerCase()]);
-    };
-
-    this.sendHelper = function(message, find, replace) {
-        var tmpMsg = message;
-        find.forEach(function(f, i) {
-            tmpMsg = this.bot.replaceAll(tmpMsg, f, replace[i]);
-        }.bind(this));
-
-        this.core.send(tmpMsg);
-    };
-
-
-    //Setup
-    //====================================================================================
-    this.setAutoLaunch(true);
-
-    function defaultHelper(obj, prop, def) {
-        if (!obj.hasOwnProperty(prop)) {
-            obj[prop] = def;
+        switch (target.toLocaleLowerCase()) {
+            case 'adminbanker':
+                return ex.bot.checkGroup('Admin', name) || ex.bankers.includes(name);
+            case 'banker':
+                return ex.bankers.includes(name);
+            default:
+                return ex.bot.checkGroup(target, name);
         }
     }
 
-    //Previously, a version was not set. Default to 2.
-    var lastVersion = localStorage.getItem('biblio_banks_version');
-    lastVersion = (lastVersion === null) ? '2' : lastVersion;
-    //Save the current version
-    localStorage.setItem('biblio_banks_version', this.version);
-    if (lastVersion == '2') {
-        //Upgrade needed.
+    function sendHelper(message, replacements, name) {
+        var m = Object.keys(replacements).reduce(function(p, key) {
+            return p.replace(new RegExp('{{' + key + '}}', 'g'), replacements[key]);
+        }, message);
 
-        //Loop through every localStorage item
-        Object.keys(localStorage).forEach(function(key) {
-            //Only make a change if this was an account object
-            if (key.indexOf('biblio_banks_accounts') === 0) {
-                //Get the old object
-                var accounts = localStorage.getItem(key);
-                //Just in case, default to an empty object.
-                accounts = (accounts === null) ? {} : JSON.parse(accounts);
-                if (typeof accounts != 'object' || accounts !== null) {
-                    accounts = {};
-                }
-                var newAccounts = {};
+        if (name) {
+            m = m.replace(/{{NAME}}/g, name)
+                .replace(/{{Name}}/g, name[0] + name.substr(1).toLocaleLowerCase())
+                .replace(/{{name}}/g, name.toLocaleLowerCase());
+        }
 
-                //Loop through the old accounts, change the format {BIBLIOPHILE: 1} to {BIBLIOPHILE: {balance: 1}}
-                Object.keys(accounts).forEach(function(name) {
-                    newAccounts[name] = {};
-                    newAccounts[name].balance = accounts[name];
-                });
+        if (m.length > 3) {
+            ex.bot.send(m);
+        }
+    }
 
-                //Save the altered account object
-                localStorage.setItem(key, JSON.stringify(newAccounts));
+    addListener('check', function(name, args) {
+        var check = name;
+        if (args && privilageCheck(name, 'check')) {
+            check = args.toLocaleUpperCase();
+        }
+
+        if (!account.canExist(check)) {
+            sendHelper(ex.messages.error_no_account, {command: 'check'});
+            return;
+        }
+
+        account.createIfDoesNotExist(check);
+
+        sendHelper(ex.messages.check, {
+            amount: account.getBalance(check),
+            currency: ex.currency
+        }, check);
+    });
+
+    addListener('transfer', function(name, args) {
+        var parts = args.split(/([0-9]+) (.{3,})/);
+
+        if (!parts[2]) {
+            return; //Invalid match
+        }
+
+        account.createIfDoesNotExist(name);
+
+        var amount = +parts[1];
+        var to = parts[2].toLocaleUpperCase();
+
+        //Sufficient funds?
+        if (account.getBalance(name) < amount) {
+            sendHelper(ex.messages.error_funds, {
+                currency: ex.currency,
+            }, name);
+            return;
+        }
+
+        //Can we transfer currency to "to"?
+        if (!account.canExist(to)) {
+            sendHelper(ex.messages.error_no_account, {
+                command: 'transfer',
+            });
+            return;
+        }
+        account.createIfDoesNotExist(to);
+
+        //Will this transfer put the to account over the currency limit?
+        if (account.getBalance(to) + amount > ex.limit) {
+            sendHelper(ex.message.error_limit_reached, {
+                currency: ex.currency,
+            }, to);
+            return;
+        }
+
+        //Everything checks out, do the transfer.
+        account.transfer(name, to, amount);
+
+        //Let users know it succeeded
+        sendHelper(ex.messages.transfer, {
+            FROM: name,
+            From: name[0] + name.substr(1).toLocaleLowerCase(),
+            from: name.toLocaleLowerCase(),
+            TO: to,
+            To: to[0] + to.substr(1).toLocaleLowerCase(),
+            to: to.toLocaleLowerCase(),
+            amount: amount,
+            currency: ex.currency,
+        });
+    });
+
+    addListener('add', function(name, args) {
+        var parts = args.split(/([0-9]+) (.{3,})/);
+        if (!parts[2]) {
+            return; //Invalid match
+        }
+
+        if (!privilageCheck(name, 'add')) {
+            return;
+        }
+
+        var amount = +parts[1];
+        var to = parts[2].toLocaleUpperCase();
+
+        //Can we even add to "to"?
+        if (!account.canExist(to)) {
+            ex.sendHelper(ex.messages.error_no_account, {
+                command: 'add',
+            });
+            return;
+        }
+        account.createIfDoesNotExist(to);
+
+        //Check the limit to be safe
+        if (account.getBalance(to) + amount > ex.limit) {
+            sendHelper(ex.messages.error_limit_reached, {
+                currency: ex.currency,
+            }, to);
+            return;
+        }
+
+        //Everything checks out, add the currency.
+        account.deposit(to, amount);
+
+        //Let the user know we added the currency.
+        sendHelper(ex.messages.add, {
+            currency: ex.currency,
+            amount: amount,
+        }, to);
+    });
+
+    addListener('addsilent', function(name, args) {
+        var parts = args.split(/([0-9]+) (.{3,})/);
+        if (!parts[2]) {
+            return; //Invalid format
+        }
+
+        if (!privilageCheck(name, 'silent')) {
+            return;
+        }
+
+        var amount = +parts[1];
+        var to = parts[2].toLocaleUpperCase();
+
+        //Does or can the to account exist?
+        if (!account.canExist(to)) {
+            return;
+        }
+        account.createIfDoesNotExist(to);
+
+        //Limit?
+        if (account.getBalance(to) + amount > ex.limit) {
+            return;
+        }
+
+        //Everything checks out, add the currency
+        account.deposit(to, amount);
+    });
+
+    addListener('adddaily', function(name, args) {
+        var parts = args.split(/([0-9]+) (.{3,})/);
+        if (!parts[2]) {
+            return; //Invalid format
+        }
+
+        if (!privilageCheck(name, 'daily')) {
+            return;
+        }
+
+        var amount = +parts[1];
+        var to = parts[2].toLocaleUpperCase();
+
+        if (!account.canExist(to)) {
+            sendHelper(ex.messages.error_no_account, {command: 'adddaily'});
+        }
+        account.createIfDoesNotExist(to);
+
+        var lastAdd = ex.accounts[to].last_daily_award || 0;
+
+        if (lastAdd / 1000 / 60 / 60 / 24 < Date.now() / 1000 / 60 / 60 / 24 - 1) {
+            account.deposit(to, amount);
+            ex.accounts[to].last_daily_award = Date.now();
+            sendHelper(ex.messages.daily_yes, {
+                amount: amount,
+                currency: ex.currency,
+            }, to);
+        } else {
+            sendHelper(ex.messages.daily_no, {
+                amount: amount,
+                currency: ex.currency,
+            }, to);
+        }
+    });
+
+    addListener('remove', function(name, args) {
+        var parts = args.split(/([0-9]+) (.{3,})/);
+        if (!parts[2]) {
+            return; //Invalid format
+        }
+
+        if (!privilageCheck(name, 'remove')) {
+            return;
+        }
+
+        var amount = +parts[1];
+        var user = parts[2].toLocaleUpperCase();
+
+        if (!account.canExist(user)) {
+            sendHelper(ex.messages.error_no_account, {command: 'remove'});
+        }
+        account.createIfDoesNotExist(user);
+
+        if (account.getBalance(user) - amount < 0) {
+            return; //No negative balances allowed.
+        }
+
+        account.withdraw(user, amount);
+        sendHelper(ex.messages.remove, {
+            amount: amount,
+            currency: ex.currency,
+        }, user);
+    });
+
+    addListener('addonline', function(name, args) {
+        var amount = +args;
+        if (isNaN(amount)) {
+            return; //Invalid number to add
+        }
+
+        if (!privilageCheck(name, 'online')) {
+            return;
+        }
+
+        ex.bot.world.online.forEach(function(player) {
+            account.createIfDoesNotExist(player);
+            //Silently ignore limit errors to avoid spam.
+            if (account.getBalance(player) + amount <= ex.limit) {
+                account.deposit(player, amount);
             }
         });
-    }
 
-    this.currency = localStorage.getItem('biblio_banks_currency' + window.worldId);
-    this.currency = (this.currency === null) ? 'Server Coin' : this.currency;
+        sendHelper(ex.messages.online, {
+            amount: amount,
+            currency: ex.currency,
+        });
+    });
 
-    this.accounts = localStorage.getItem('biblio_banks_accounts' + window.worldId);
-    this.accounts = (this.accounts === null) ? {} : JSON.parse(this.accounts);
-    if (!this.accounts.hasOwnProperty('SERVER')) {
-        this.accounts.SERVER = {};
-        this.accounts.SERVER.balance = 0;
-    }
+    addListener('banker', function(name, args) {
+        if (!privilageCheck(name, 'banker')) {
+            return;
+        }
 
-    this.bankers = localStorage.getItem('biblio_banks_bankers' + window.worldId);
-    this.bankers = (this.bankers === null) ? [] : JSON.parse(this.bankers);
+        var canidate = args.toLocaleUpperCase();
 
-    this.limit = localStorage.getItem('biblio_banks_limit' + window.worldId);
-    this.limit = (this.limit === null) ? 10000000 : parseInt(this.limit); //Default: 10mil
+        if (!account.canExist(canidate)) {
+            sendHelper(ex.message.error_no_account, {
+                command: 'banker',
+            });
+            return;
+        }
 
-    this.perms = localStorage.getItem('biblio_banks_perms' + window.worldId);
-    this.perms = (this.perms === null) ? {} : JSON.parse(this.perms);
-    defaultHelper(this.perms, 'check', 'All');
-    defaultHelper(this.perms, 'add', 'AdminBanker');
-    defaultHelper(this.perms, 'silent', 'AdminBanker');
-    defaultHelper(this.perms, 'online', 'AdminBanker');
-    defaultHelper(this.perms, 'remove', 'AdminBanker');
-    defaultHelper(this.perms, 'banker', 'Admin');
+        if (!ex.bankers.includes(canidate)) {
+            ex.bankers.push(canidate);
+            sendHelper(ex.messages.banker_yes, {}, canidate);
+        } else {
+            sendHelper(ex.messages.banker_on_list_already, {}, canidate);
+        }
+    });
 
-    this.messages = localStorage.getItem('biblio_banks_messages' + window.worldId);
-    this.messages = (this.messages === null) ? {} : JSON.parse(this.messages);
-    defaultHelper(this.messages, 'check', '{{Name}} currently has {{ammount}} {{currency}}.');
-    defaultHelper(this.messages, 'transfer', 'Transferred {{ammount}} {{currency}} from {{From}} to {{To}}.');
-    defaultHelper(this.messages, 'add', 'Added {{ammount}} {{currency}} to {{Name}}.');
-    defaultHelper(this.messages, 'online', 'Everyone online has recieved {{ammount}} {{currency}}!');
-    defaultHelper(this.messages, 'daily_yes', 'Added daily reward of {{currency}} to {{Name}}.');
-    defaultHelper(this.messages, 'daily_no', '{{Name}} has already recieved their daily reward.');
-    defaultHelper(this.messages, 'remove', 'Removed {{ammount}} {{currency}} from {{Name}}.');
-    defaultHelper(this.messages, 'banker_yes', '{{Name}} has been added to the banker list.');
-    defaultHelper(this.messages, 'banker_on_list_already', '{{Name}} was already on the banker list.');
-    defaultHelper(this.messages, 'banker_no', '{{Name}} has been removed from the banker list.');
-    defaultHelper(this.messages, 'banker_not_on_list', '{{Name}} was not on the banker list.');
-    defaultHelper(this.messages, 'error_no_account', 'Error: unable to {{command}}, the specified account does not exist.');
-    defaultHelper(this.messages, 'error_limit_reached', 'Error: {{Name}} can\'t have more {{currency}} added to their account.');
-    defaultHelper(this.messages, 'error_funds', 'Error: {{Name}} does not have enough {{currency}} to transfer funds.');
+    addListener('unbanker', function(name, args) {
+        if (!privilageCheck(name, 'banker')) {
+            return;
+        }
+        var demoted = args.toLocaleUpperCase();
 
-    this.addTriggerListener('checkCommands', this.commandCheck.bind(this));
-    this.addBeforeSendListener('checkCommands', this.commandCheck.bind(this));
+        if (ex.bankers.includes(demoted)) {
+            ex.bankers.splice(ex.bankers.indexOf(demoted), 1);
+            sendHelper(ex.messages.banker_no, {}, demoted);
+        } else {
+            sendHelper(ex.messages.banker_not_on_list, {}, demoted);
+        }
+    });
 
-    this.addSettingsTab('Banking');
-    this.settingsTab.innerHTML = '<style>#mb_biblio_banks_search div.awesomplete { top:7px; }#biblio_banks_user { margin-top: 5px;}#biblio_banks_user button { margin-right: 5px; padding: 2px; border: 2px solid #666;}#mb_biblio_banks_messages > input { width: calc(100% - 20px); margin-left: 10px;}#biblio_banks_mt > div.visible { background: #E7E7E7; }#biblio_banks_mt > div { min-height: calc(100vh - 280px); padding: 5px; margin-bottom: 20px; }</style><nav class="botTabs" tab-contents="biblio_banks_mt"><div tab-name="biblio_banks_commands" class="selected">Commands</div><div tab-name="biblio_banks_search">Search</div><div tab-name="biblio_banks_messages">Settings</div></nav><div id="biblio_banks_mt" class="tabContainer"><div id="mb_biblio_banks_commands" class="visible"><ul style="padding-left: 1.5em;"><li>/CHECK - Checks how much currency the user has.<li>/CHECK [name] - (<select data-perm="check"><option value="All">everyone</option><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select>) Checks how much currency [name] has.<li>/TRANSFER [ammount] [to] - Transfers [ammount] from the current user\'s account to the [to] account.<li>/ADD [ammount] [name] - (<select data-perm="add"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Adds [ammount] to [name]\'s account.<li>/ADDSILENT [ammount] [name] - (<select data-perm="silent"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Adds [ammount] to [name]\'s account. Does not send a message on success or failure.<li>/ADDDAILY [ammount] [name] - (<select data-perm="daily"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Adds [ammount] to [name]\'s account. Can only add to an account once per day.<li>/ADDONLINE [ammount] - (<select data-perm="online"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Adds [ammount] to everyone who is online.<li>/REMOVE [ammount] [name] - (<select data-perm="remove"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Removes [ammount] from [name]\'s account.<li>/BANKER [name] or /UNBANKER [name] - (<select data-perm="banker"><option value="Admin">admin only</option><option value="AdminBanker">admin &amp; banker only</option><option value="Banker">banker only</option></select> only) Adds or removes [name] to/from the banker list.</li></ul></div><div id="mb_biblio_banks_search"><p><input id="biblio_banks_input" disabled="1" placeholder="Loading..."/> or <a>view all bank accounts</a></p><div id="biblio_banks_user"></div></div><div id="mb_biblio_banks_messages"><h3>General</h3><label>Currency Name: </label><input id="biblio_banks_currency"/><label>Account Limit: </label><input id="biblio_banks_limit" type="number" max="100000000" min="0"/><h3>Responses - Commands</h3><label>/CHECK:</label><input data-msg-key="check"/><label>/TRANSFER:</label><input data-msg-key="transfer"/><label>/ADD:</label><input data-msg-key="add"/><label>/ADDONLINE:</label><input data-msg-key="online"/><label>/ADDDAILY - Added:</label><input data-msg-key="daily_yes"/><label>/ADDDAILY - Already added:</label><input data-msg-key="daily_no"/><label>/REMOVE:</label><input data-msg-key="remove"/><label>/BANKER - Added:</label><input data-msg-key="banker_yes"/><label>/BANKER - Already on list:</label><input data-msg-key="banker_on_list_already"/><label>/UNBANKER - Removed:</label><input data-msg-key="banker_no"/><label>/UNBANKER - Not a banker:</label><input data-msg-key="banker_not_on_list"/><h3>Responses - Errors</h3><label>Account does not exist:</label><input data-msg-key="error_no_account"/><label>Account limit reached:</label><input data-msg-key="error_limit_reached"/><label>Insufficient funds:</label><input data-msg-key="error_funds"/></div></div>';
+    ex.tab.innerHTML = ' <style>#biblio_banks_tn{width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-flow:row wrap;flex-flow:row wrap}#biblio_banks_tn>span{background:#182B73;color:#fff;height:40px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;margin-top:5px;margin-right:5px;min-width:120px}#biblio_banks_tn>span.selected{background:#E7E7E7;color:#000}#biblio_banks_tc>div{display:none;height:calc(100vh - 155px);overflow-y:auto;background:#E7E7E7;padding:5px}#biblio_banks_tc>div.visible{display:block}#mb_biblio_banks_search .awesomplete{top:7px}#biblio_banks_user{margin-top:5px}#biblio_banks_tc [data-tab-name=settings]>input{width:calc(100% - 20px);margin-left:10px}</style><nav data-scope=biblio_banks_tc id=biblio_banks_tn><span data-tab-name=commands class=selected>Commands</span><span data-tab-name=search>Search</span><span data-tab-name=settings>Settings</span></nav><div id=biblio_banks_tc><div data-tab-name=commands class=visible><ul style=padding-left:1.5em><li>/CHECK - Checks how much currency the user has.</li><li>/CHECK [name] - (<select data-perm=check><option value=All>everyone</option><option value=Admin>admin only</option><option value=AdminBanker>admin &amp; banker only</option><option value=Banker>banker only</option></select>) Checks how much currency [name] has.</li><li>/TRANSFER [amount] [to] - Transfers [amount] from the current user&apos;s account to the [to] account.</li><li>/ADD [amount] [name] - (<select data-perm=add><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account.</li><li>/ADDSILENT [amount] [name] - (<select data-perm=silent><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li><li>/ADDDAILY [amount] [name] - (<select data-perm=daily><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li><li>/ADDONLINE [amount] - (<select data-perm=online><option value=Admin>admin only</option><option value=AdminBanker>admin &amp; banker only</option><option value=Banker>banker only</option></select> only) Adds [amount] to everyone who is online.</li><li>/REMOVE [amount] [name] - (<select data-perm=remove><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Removes [amount] from [name]&apos;s account.</li><li>/BANKER [name] or /UNBANKER [name] - (<select data-perm=banker><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds or removes [name] to/from the banker list.</li></ul></div><div data-tab-name=search><p><input id=biblio_banks_input disabled placeholder=Loading...> or <a>view all bank accounts</a></p><div id=biblio_banks_user></div></div><div data-tab-name=settings><h3>General</h3><label>Currency Name:</label><input id=biblio_banks_currency><label>Account Currency Limit:</label><input id=biblio_banks_limit max=100000000 min=0 type=number><h3>Responses - Commands</h3><label>/CHECK:</label><input data-msg-key=check><label>/TRANSFER:</label><input data-msg-key=transfer><label>/ADD:</label><input data-msg-key=add><label>/ADDONLINE:</label><input data-msg-key=online><label>/ADDDAILY - Added:</label><input data-msg-key=daily_yes><label>/ADDDAILY - Already added:</label><input data-msg-key=daily_no><label>/REMOVE:</label><input data-msg-key=remove><label>/BANKER - Added:</label><input data-msg-key=banker_yes><label>/BANKER - Already on list:</label><input data-msg-key=banker_on_list_already><label>/UNBANKER - Removed:</label><input data-msg-key=banker_no><label>/UNBANKER - Not a banker:</label><input data-msg-key=banker_not_on_list><h3>Responses - Errors</h3><label>Account does not exist:</label><input data-msg-key=error_no_account><label>Account limit reached:</label><input data-msg-key=error_limit_reached><label>Insufficient funds:</label><input data-msg-key=error_funds></div></div>';
 
-    this.settingsTab.querySelector('nav').addEventListener('click', this.bot.changeTab, false);
 
-    this.settingsTab.querySelector('a').addEventListener('click', this.showAll.bind(this));
 
-    document.getElementById('biblio_banks_currency').value = this.currency;
-    document.getElementById('biblio_banks_limit').value = this.limit;
 
-    Object.keys(this.messages).forEach(function(message) {
-        this.settingsTab.querySelector('#mb_biblio_banks_messages > input[data-msg-key="' + message +'"]').value = this.messages[message];
-    }.bind(this));
+    //Show the saved preferences
+    document.getElementById('biblio_banks_currency').value = ex.currency;
+    document.getElementById('biblio_banks_limit').value = ex.limit;
 
-    Object.keys(this.perms).forEach(function(key) {
-        this.settingsTab.querySelector('select[data-perm="' + key + '"]').value = this.perms[key];
-    }.bind(this));
+    Object.keys(ex.messages).forEach(function(message) {
+        ex.tab.querySelector('#biblio_banks_tc input[data-msg-key="' + message +'"]').value = ex.messages[message];
+    });
 
-    document.getElementById('mb_biblio_banks_messages').addEventListener('change', this.save.bind(this), false);
-    document.getElementById('mb_biblio_banks_commands').addEventListener('change', this.save.bind(this), false);
-    document.getElementById('biblio_banks_input').addEventListener('blur', this.accountInfo.bind(this));
-    document.getElementById('biblio_banks_input').addEventListener('keyup', this.accountInfo.bind(this));
+    Object.keys(ex.perms).forEach(function(key) {
+        ex.tab.querySelector('#biblio_banks_tc select[data-perm="' + key + '"]').value = ex.perms[key];
+    });
 
-    this.lazyLoad();
-}.bind(biblio_banks)());
+    //Event listeners
+    ex.tab.querySelector('nav').addEventListener('click', function(event) {
+        var tabName = event.target.dataset.tabName;
+        if (tabName) {
+            //Tab nav
+            document.querySelector('#biblio_banks_tn > .selected').classList.remove('selected');
+            event.target.classList.add('selected');
+            //Tab content
+            document.querySelector('#biblio_banks_tc > .visible').classList.remove('visible');
+            document.querySelector('#biblio_banks_tc [data-tab-name="' + tabName + '"]').classList.add('visible');
+
+        }
+    });
+    ex.tab.querySelector('a').addEventListener('click', ex.showAll);
+    ex.tab.querySelector('[data-tab-name="commands"]').addEventListener('change', ex.save);
+    ex.tab.querySelector('[data-tab-name="settings"]').addEventListener('change', ex.save);
+    document.getElementById('biblio_banks_input').addEventListener('blur', ex.accountInfo);
+    document.getElementById('biblio_banks_input').addEventListener('keyup', ex.accountInfo);
+    document.getElementById('biblio_banks_input').addEventListener('awesomplete-selectcomplete', ex.accountInfo);
+}(biblio_banks));
