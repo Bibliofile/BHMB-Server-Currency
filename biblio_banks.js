@@ -225,6 +225,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
         html += '</ul><h4>All accounts:</h4><ul style="padding-left: 1.5em;">';
 
         Object.keys(ex.accounts).forEach(function(key) {
+            account.createIfDoesNotExist(key); //Odd, but should fix the error
             html += '<li' + ((ex.bankers.includes(key)) ? ' style="color:#182B73">' : '>') +
                 stripHTML(key) + ' has ' + account.getBalance(key) + ' ' + stripHTML(ex.currency);
         });
@@ -363,7 +364,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     });
 
     addListener('transfer', function(name, args) {
-        var parts = args.split(/([0-9]+) (.{3,})/);
+        var parts = args.split(/([0-9]+) (.{1,})/);
 
         if (!parts[2]) {
             return; //Invalid match
@@ -416,7 +417,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     });
 
     addListener('add', function(name, args) {
-        var parts = args.split(/([0-9]+) (.{3,})/);
+        var parts = args.split(/([0-9]+) (.{1,})/);
         if (!parts[2]) {
             return; //Invalid match
         }
@@ -456,7 +457,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     });
 
     addListener('addsilent', function(name, args) {
-        var parts = args.split(/([0-9]+) (.{3,})/);
+        var parts = args.split(/([0-9]+) (.{1,})/);
         if (!parts[2]) {
             return; //Invalid format
         }
@@ -484,7 +485,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     });
 
     addListener('adddaily', function(name, args) {
-        var parts = args.split(/([0-9]+) (.{3,})/);
+        var parts = args.split(/([0-9]+) (.{1,})/);
         if (!parts[2]) {
             return; //Invalid format
         }
@@ -519,7 +520,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     });
 
     addListener('remove', function(name, args) {
-        var parts = args.split(/([0-9]+) (.{3,})/);
+        var parts = args.split(/([0-9]+) (.{1,})/);
         if (!parts[2]) {
             return; //Invalid format
         }
