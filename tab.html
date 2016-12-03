@@ -97,6 +97,12 @@
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Adds [ammount] to [name]&apos;s account. Can only add to an account once per day.</li>
+            <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>
+            <li>/LASTDAILY [name] - (<select data-perm="lastdaily">
+                <option value="Admin">admin</option>
+                <option value="AdminBanker">admin &amp; banker</option>
+                <option value="Banker">banker</option>
+            </select> only) Checks the last time [name] recieved a daily award.</li>
             <li>/ADDONLINE [ammount] - (<select data-perm="online">
                 <option value="Admin">admin only</option>
                 <option value="AdminBanker">admin &amp; banker only</option>
@@ -140,6 +146,8 @@
             <input data-msg-key="daily_yes">
             <label>/ADDDAILY - Already added:</label>
             <input data-msg-key="daily_no">
+            <label>/LASTDAILY:</label>
+            <input data-msg-key="last_daily">
             <label>/REMOVE:</label>
             <input data-msg-key="remove">
             <label>/BANKER - Added:</label>

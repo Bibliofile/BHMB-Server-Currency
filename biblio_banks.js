@@ -102,6 +102,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
         online: 'Everyone online has recieved {{amount}} {{currency}}!',
         daily_yes: 'Added daily reward of {{currency}} to {{Name}}.',
         daily_no: '{{Name}} has already recieved their daily reward.',
+        last_daily: '{{Name}} last recieved a daily award at {{time}}',
         remove: 'Removed {{amount}} {{currency}} from {{Name}}.',
         banker_yes: '{{Name}} has been added to the banker list.',
         banker_on_list_already: '{{Name}} was already on the banker list.',
@@ -143,6 +144,9 @@ var biblio_banks = MessageBotExtension('biblio_banks');
     account.transfer = function(from, to, amount) {
         account.withdraw(from, amount);
         account.deposit(to, amount);
+    };
+    account.getLastDaily = function(name) {
+        return ex.accounts[name.toLocaleUpperCase()].last_daily_award || 0;
     };
 
     function merge(a, b) {
@@ -502,7 +506,8 @@ var biblio_banks = MessageBotExtension('biblio_banks');
         }
         account.createIfDoesNotExist(to);
 
-        var lastAdd = ex.accounts[to].last_daily_award || 0;
+
+        var lastAdd = account.getLastDaily(to);
 
         if (lastAdd / 1000 / 60 / 60 / 24 < Date.now() / 1000 / 60 / 60 / 24 - 1) {
             account.deposit(to, amount);
@@ -517,6 +522,22 @@ var biblio_banks = MessageBotExtension('biblio_banks');
                 currency: ex.currency,
             }, to);
         }
+    });
+
+    addListener('lastdaily', function(name, args) {
+        var check = name;
+        if (args && privilageCheck(name, 'lastdaily')) {
+            check = args.toLocaleUpperCase();
+        }
+
+        if (!account.canExist(check)) {
+            sendHelper(ex.messages.error_no_account, {command: 'lastdaily'});
+            return;
+        }
+
+        sendHelper(ex.messages.last_daily, {
+            time: (new Date(account.getLastDaily(check))).toString(),
+        }, check);
     });
 
     addListener('remove', function(name, args) {
@@ -608,7 +629,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
         }
     });
 
-    ex.tab.innerHTML = ' <style>#biblio_banks_tn{width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-flow:row wrap;flex-flow:row wrap}#biblio_banks_tn>span{background:#182B73;color:#fff;height:40px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;margin-top:5px;margin-right:5px;min-width:120px}#biblio_banks_tn>span.selected{background:#E7E7E7;color:#000}#biblio_banks_tc>div{display:none;height:calc(100vh - 155px);overflow-y:auto;background:#E7E7E7;padding:5px}#biblio_banks_tc>div.visible{display:block}#mb_biblio_banks_search .awesomplete{top:7px}#biblio_banks_user{margin-top:5px}#biblio_banks_tc [data-tab-name=settings]>input{width:calc(100% - 20px);margin-left:10px}</style><nav data-scope=biblio_banks_tc id=biblio_banks_tn><span data-tab-name=commands class=selected>Commands</span><span data-tab-name=search>Search</span><span data-tab-name=settings>Settings</span></nav><div id=biblio_banks_tc><div data-tab-name=commands class=visible><ul style=padding-left:1.5em><li>/CHECK - Checks how much currency the user has.</li><li>/CHECK [name] - (<select data-perm=check><option value=All>everyone</option><option value=Admin>admin only</option><option value=AdminBanker>admin &amp; banker only</option><option value=Banker>banker only</option></select>) Checks how much currency [name] has.</li><li>/TRANSFER [amount] [to] - Transfers [amount] from the current user&apos;s account to the [to] account.</li><li>/ADD [amount] [name] - (<select data-perm=add><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account.</li><li>/ADDSILENT [amount] [name] - (<select data-perm=silent><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li><li>/ADDDAILY [amount] [name] - (<select data-perm=daily><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li><li>/ADDONLINE [amount] - (<select data-perm=online><option value=Admin>admin only</option><option value=AdminBanker>admin &amp; banker only</option><option value=Banker>banker only</option></select> only) Adds [amount] to everyone who is online.</li><li>/REMOVE [amount] [name] - (<select data-perm=remove><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Removes [amount] from [name]&apos;s account.</li><li>/BANKER [name] or /UNBANKER [name] - (<select data-perm=banker><option value=Admin>admin</option><option value=AdminBanker>admin &amp; banker</option><option value=Banker>banker</option></select> only) Adds or removes [name] to/from the banker list.</li></ul></div><div data-tab-name=search><p><input id=biblio_banks_input disabled placeholder=Loading...> or <a>view all bank accounts</a></p><div id=biblio_banks_user></div></div><div data-tab-name=settings><h3>General</h3><label>Currency Name:</label><input id=biblio_banks_currency><label>Account Currency Limit:</label><input id=biblio_banks_limit max=100000000 min=0 type=number><h3>Responses - Commands</h3><label>/CHECK:</label><input data-msg-key=check><label>/TRANSFER:</label><input data-msg-key=transfer><label>/ADD:</label><input data-msg-key=add><label>/ADDONLINE:</label><input data-msg-key=online><label>/ADDDAILY - Added:</label><input data-msg-key=daily_yes><label>/ADDDAILY - Already added:</label><input data-msg-key=daily_no><label>/REMOVE:</label><input data-msg-key=remove><label>/BANKER - Added:</label><input data-msg-key=banker_yes><label>/BANKER - Already on list:</label><input data-msg-key=banker_on_list_already><label>/UNBANKER - Removed:</label><input data-msg-key=banker_no><label>/UNBANKER - Not a banker:</label><input data-msg-key=banker_not_on_list><h3>Responses - Errors</h3><label>Account does not exist:</label><input data-msg-key=error_no_account><label>Account limit reached:</label><input data-msg-key=error_limit_reached><label>Insufficient funds:</label><input data-msg-key=error_funds></div></div>';
+    ex.tab.innerHTML = ' <style>#biblio_banks_tn{width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-flow:row wrap;flex-flow:row wrap}#biblio_banks_tn>span{background:#182B73;color:#fff;height:40px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;margin-top:5px;margin-right:5px;min-width:120px}#biblio_banks_tn>span.selected{background:#E7E7E7;color:#000}#biblio_banks_tc>div{display:none;height:calc(100vh - 155px);overflow-y:auto;background:#E7E7E7;padding:5px}#biblio_banks_tc>div.visible{display:block}#mb_biblio_banks_search .awesomplete{top:7px}#biblio_banks_user{margin-top:5px}#biblio_banks_tc [data-tab-name=settings]>input{width:calc(100% - 20px);margin-left:10px}</style> <nav data-scope=biblio_banks_tc id=biblio_banks_tn> <span data-tab-name=commands class=selected>Commands</span> <span data-tab-name=search>Search</span> <span data-tab-name=settings>Settings</span> </nav> <div id=biblio_banks_tc> <div data-tab-name=commands class=visible> <ul style=padding-left:1.5em> <li>/CHECK - Checks how much currency the user has.</li> <li>/CHECK [name] - (<select data-perm=check> <option value=All>everyone</option> <option value=Admin>admin only</option> <option value=AdminBanker>admin &amp; banker only</option> <option value=Banker>banker only</option> </select>) Checks how much currency [name] has.</li> <li>/TRANSFER [ammount] [to] - Transfers [ammount] from the current user&apos;s account to the [to] account.</li> <li>/ADD [ammount] [name] - (<select data-perm=add> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Adds [ammount] to [name]&apos;s account.</li> <li>/ADDSILENT [ammount] [name] - (<select data-perm=silent> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Adds [ammount] to [name]&apos;s account. Does not send a message on success or failure.</li> <li>/ADDDAILY [ammount] [name] - (<select data-perm=daily> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Adds [ammount] to [name]&apos;s account. Can only add to an account once per day.</li> <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li> <li>/LASTDAILY [name] - (<select data-perm=lastdaily> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Checks the last time [name] recieved a daily award.</li> <li>/ADDONLINE [ammount] - (<select data-perm=online> <option value=Admin>admin only</option> <option value=AdminBanker>admin &amp; banker only</option> <option value=Banker>banker only</option> </select> only) Adds [ammount] to everyone who is online.</li> <li>/REMOVE [ammount] [name] - (<select data-perm=remove> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Removes [ammount] from [name]&apos;s account.</li> <li>/BANKER [name] or /UNBANKER [name] - (<select data-perm=banker> <option value=Admin>admin</option> <option value=AdminBanker>admin &amp; banker</option> <option value=Banker>banker</option> </select> only) Adds or removes [name] to/from the banker list.</li> </ul> </div> <div data-tab-name=search> <p> <input id=biblio_banks_input disabled placeholder=Loading...> or <a>view all bank accounts</a> </p> <div id=biblio_banks_user></div> </div> <div data-tab-name=settings> <h3>General</h3> <label>Currency Name:</label> <input id=biblio_banks_currency> <label>Account Currency Limit:</label> <input id=biblio_banks_limit max=100000000 min=0 type=number> <h3>Responses - Commands</h3> <label>/CHECK:</label> <input data-msg-key=check> <label>/TRANSFER:</label> <input data-msg-key=transfer> <label>/ADD:</label> <input data-msg-key=add> <label>/ADDONLINE:</label> <input data-msg-key=online> <label>/ADDDAILY - Added:</label> <input data-msg-key=daily_yes> <label>/ADDDAILY - Already added:</label> <input data-msg-key=daily_no> <label>/LASTDAILY:</label> <input data-msg-key=last_daily> <label>/REMOVE:</label> <input data-msg-key=remove> <label>/BANKER - Added:</label> <input data-msg-key=banker_yes> <label>/BANKER - Already on list:</label> <input data-msg-key=banker_on_list_already> <label>/UNBANKER - Removed:</label> <input data-msg-key=banker_no> <label>/UNBANKER - Not a banker:</label> <input data-msg-key=banker_not_on_list> <h3>Responses - Errors</h3> <label>Account does not exist:</label> <input data-msg-key=error_no_account> <label>Account limit reached:</label> <input data-msg-key=error_limit_reached> <label>Insufficient funds:</label> <input data-msg-key=error_funds> </div> </div>';
 
 
 
