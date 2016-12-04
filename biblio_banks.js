@@ -90,6 +90,7 @@ var biblio_banks = MessageBotExtension('biblio_banks');
         add: 'AdminBanker',
         silent: 'AdminBanker',
         daily: 'AdminBanker',
+        lastdaily: 'AdminBanker',
         online: 'AdminBanker',
         remove: 'AdminBanker',
         banker: 'Admin',
