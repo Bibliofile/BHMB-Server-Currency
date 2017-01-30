@@ -58,11 +58,6 @@
 #biblio_banks_user {
     margin-top: 5px;
 }
-
-#biblio_banks_tc [data-tab-name=settings] > input {
-    width: calc(100% - 20px);
-    margin-left: 10px;
-}
 </style>
 
 <nav id="biblio_banks_tn" data-scope="biblio_banks_tc">
@@ -75,45 +70,45 @@
     <div class="visible" data-tab-name="commands">
         <ul style="padding-left: 1.5em;">
             <li>/CHECK - Checks how much currency the user has.</li>
-            <li>/CHECK [name] - (<select data-perm="check">
+            <li>/CHECK [name] - (<select class="select" data-perm="check">
                 <option value="All">everyone</option>
                 <option value="Admin">admin only</option>
                 <option value="AdminBanker">admin &amp; banker only</option>
                 <option value="Banker">banker only</option>
             </select>) Checks how much currency [name] has.</li>
             <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user&apos;s account to the [to] account.</li>
-            <li>/ADD [amount] [name] - (<select data-perm="add">
+            <li>/ADD [amount] [name] - (<select class="select" data-perm="add">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Adds [amount] to [name]&apos;s account.</li>
-            <li>/ADDSILENT [amount] [name] - (<select data-perm="silent">
+            <li>/ADDSILENT [amount] [name] - (<select class="select" data-perm="silent">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>
-            <li>/ADDDAILY [amount] [name] - (<select data-perm="daily">
+            <li>/ADDDAILY [amount] [name] - (<select class="select" data-perm="daily">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>
             <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>
-            <li>/LASTDAILY [name] - (<select data-perm="lastdaily">
+            <li>/LASTDAILY [name] - (<select class="select" data-perm="lastdaily">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Checks the last time [name] recieved a daily award.</li>
-            <li>/ADDONLINE [amount] - (<select data-perm="online">
+            <li>/ADDONLINE [amount] - (<select class="select" data-perm="online">
                 <option value="Admin">admin only</option>
                 <option value="AdminBanker">admin &amp; banker only</option>
                 <option value="Banker">banker only</option>
             </select> only) Adds [amount] to everyone who is online.</li>
-            <li>/REMOVE [amount] [name] - (<select data-perm="remove">
+            <li>/REMOVE [amount] [name] - (<select class="select" data-perm="remove">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
             </select> only) Removes [amount] from [name]&apos;s account.</li>
-            <li>/BANKER [name] or /UNBANKER [name] - (<select data-perm="banker">
+            <li>/BANKER [name] or /UNBANKER [name] - (<select class="select" data-perm="banker">
                 <option value="Admin">admin</option>
                 <option value="AdminBanker">admin &amp; banker</option>
                 <option value="Banker">banker</option>
@@ -122,49 +117,49 @@
     </div>
     <div data-tab-name="search">
         <p>
-            <input disabled="1" id="biblio_banks_input" placeholder="Loading..."> or <a>view all bank accounts</a>
+            <input disabled="1" id="biblio_banks_input" class="input" placeholder="Loading..."> or <a>view all bank accounts</a>
         </p>
         <div id="biblio_banks_user"></div>
     </div>
     <div data-tab-name="settings">
         <h3>General</h3>
             <label>Currency Name:</label>
-            <input id="biblio_banks_currency">
+            <input class="input" id="biblio_banks_currency">
             <label>Account Currency Limit:</label>
-            <input id="biblio_banks_limit" max="100000000" min="0" type="number">
+            <input class="input" id="biblio_banks_limit" max="100000000" min="0" type="number">
 
         <h3>Responses - Commands</h3>
             <label>/CHECK:</label>
-            <input data-msg-key="check">
+            <input class="input" data-msg-key="check">
             <label>/TRANSFER:</label>
-            <input data-msg-key="transfer">
+            <input class="input" data-msg-key="transfer">
             <label>/ADD:</label>
-            <input data-msg-key="add">
+            <input class="input" data-msg-key="add">
             <label>/ADDONLINE:</label>
-            <input data-msg-key="online">
+            <input class="input" data-msg-key="online">
             <label>/ADDDAILY - Added:</label>
-            <input data-msg-key="daily_yes">
+            <input class="input" data-msg-key="daily_yes">
             <label>/ADDDAILY - Already added:</label>
-            <input data-msg-key="daily_no">
+            <input class="input" data-msg-key="daily_no">
             <label>/LASTDAILY:</label>
-            <input data-msg-key="last_daily">
+            <input class="input" data-msg-key="last_daily">
             <label>/REMOVE:</label>
-            <input data-msg-key="remove">
+            <input class="input" data-msg-key="remove">
             <label>/BANKER - Added:</label>
-            <input data-msg-key="banker_yes">
+            <input class="input" data-msg-key="banker_yes">
             <label>/BANKER - Already on list:</label>
-            <input data-msg-key="banker_on_list_already">
+            <input class="input" data-msg-key="banker_on_list_already">
             <label>/UNBANKER - Removed:</label>
-            <input data-msg-key="banker_no">
+            <input class="input" data-msg-key="banker_no">
             <label>/UNBANKER - Not a banker:</label>
-            <input data-msg-key="banker_not_on_list">
+            <input class="input" data-msg-key="banker_not_on_list">
 
         <h3>Responses - Errors</h3>
             <label>Account does not exist:</label>
-            <input data-msg-key="error_no_account">
+            <input class="input" data-msg-key="error_no_account">
             <label>Account limit reached:</label>
-            <input data-msg-key="error_limit_reached">
+            <input class="input" data-msg-key="error_limit_reached">
             <label>Insufficient funds:</label>
-            <input data-msg-key="error_funds">
+            <input class="input" data-msg-key="error_funds">
     </div>
 </div>
