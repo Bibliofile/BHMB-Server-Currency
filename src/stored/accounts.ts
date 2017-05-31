@@ -35,6 +35,7 @@ export class AccountManager {
         if (key != 'ACCOUNT_DOES_NOT_EXIST') {
             let stored = this.storage.getObject(this.id, this.defaults);
             stored[key] = item;
+            delete stored['ACCOUNT_DOES_NOT_EXIST'];
             this.storage.set(this.id, stored);
         }
     }

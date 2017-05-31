@@ -100,6 +100,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         accounts.createIfDoesNotExist(check);
 
         ex.bot.send(messages.getMessage('check'), {
+            name: check,
             amount: accounts.getBalance(check) + '',
             currency: getCurrencyName()
         });
@@ -188,6 +189,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
 
         ex.bot.send(messages.getMessage('add'), {
             currency: getCurrencyName(),
+            amount: String(amount),
             name: to,
         });
     });
