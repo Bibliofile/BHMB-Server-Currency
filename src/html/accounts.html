@@ -1,0 +1,62 @@
+<template>
+    <tr>
+        <td data-for="name"></td>
+        <td>
+            <input type="number" class="input is-small">
+        </td>
+        <td>
+            <label>
+                Banker:
+                <input type="checkbox">
+            </label>
+        </td>
+    </tr>
+</template>
+
+<div class="container is-widescreen">
+
+    <h3 class="title">Accounts</h3>
+    <div class="content">
+        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>
+        <p>For the following special searches, you cannot use spaces.</p>
+        <ul>
+            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>
+            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>
+            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>
+            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>
+        </ul>
+    </div>
+
+    <br>
+
+    <div class="columns">
+        <div class="column">
+            <input class="input" placeholder="Enter a name...">
+        </div>
+        <div class="column is-narrow">
+            <button class="button is-danger">Delete accounts</button>
+        </div>
+    </div>
+
+    <br>
+
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>Name</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </tfoot>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>

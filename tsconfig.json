@@ -1,18 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
+        "strict": true,
         "lib": [
             "dom",
             "es7",
             "dom.iterable",
-            "scripthost"
+            "scripthost",
+            "es2017.object"
         ],
         "moduleResolution": "node",
         "module": "commonjs",
-        "downlevelIteration": true,
         "removeComments": false,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true
     }

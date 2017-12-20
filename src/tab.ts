@@ -1,23 +1,23 @@
-import { UIExtensionExports, Storage } from 'blockheads-messagebot';
-
-declare var Awesomplete: any;
+import { Storage } from '@bhmb/bot';
+import { UIExtensionExports } from '@bhmb/ui';
 
 import {
-    AccountManager, Account,
+    AccountManager,
     PermissionManager, Permissions, PermissionValues,
     BankerManager,
     MessageManager, Messages,
 } from './stored';
 
-import { loadCSS, loadJS, stripHTML } from './helpers';
+import commandsHTML from './html/commands.html';
+import accountsHTML from './html/accounts.html';
+import settingsHTML from './html/settings.html';
+import { AccountArray, AccountArrayElement } from './stored/accounts';
 
-import commandsHTML = require('./html/commands.html');
-import searchHTML = require('./html/search.html');
-import settingsHTML = require('./html/settings.html');
+import { debounce } from './helpers';
 
 export class BankingTab {
     private commandTab: HTMLDivElement;
-    private searchTab: HTMLDivElement;
+    private accountsTab: HTMLDivElement;
     private settingsTab: HTMLDivElement;
 
     constructor(
@@ -30,13 +30,8 @@ export class BankingTab {
     ) {
         this.ui.addTabGroup('Banking', 'banking');
         this.initCommandTab();
-        loadCSS('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.css');
-        this.initSearchTab();
+        this.initAccountsTab();
         this.initSettingsTab();
-
-        [this.commandTab, this.searchTab, this.settingsTab].forEach(tab => {
-            tab.classList.add('container');
-        });
     }
 
     initCommandTab() {
@@ -54,90 +49,95 @@ export class BankingTab {
         });
     }
 
-    initSearchTab() {
-        this.searchTab = this.ui.addTab('Search', 'banking');
-        this.searchTab.innerHTML = searchHTML;
+    initAccountsTab() {
+        this.accountsTab = this.ui.addTab('Accounts', 'banking');
+        this.accountsTab.innerHTML = accountsHTML;
 
-        let input = this.searchTab.querySelector('input') as HTMLInputElement;
-        let container = this.searchTab.querySelector('div') as HTMLDivElement;
+        const input = this.accountsTab.querySelector('input')!;
+        const container = this.accountsTab.querySelector('tbody')!;
+        const template = this.accountsTab.querySelector('template')!;
 
-        // Searching for a single name
-        let checkNames = () => {
-            let name = input.value;
-            if (this.accounts.canExist(name)) {
-                this.accounts.createIfDoesNotExist(name);
+        const showAccounts = (accounts: AccountArray) => {
+            container.innerHTML = '';
 
-                let amount = this.accounts.getBalance(name);
-                let safeName = stripHTML(name);
-
-                let html = `<h4 class="subtitle">${safeName}'s Account:</h4>`;
-                html += `<p>Balance: ${amount}</p>`;
-                html += `<p><label class="checkbox"><input type="checkbox" ${this.bankers.isBanker(name) ? 'checked' : ''}> Banker</label></p>`;
-
-                container.innerHTML = html;
-                let box = container.querySelector('input') as HTMLInputElement;
-                box.addEventListener('change', () => {
-                    this.bankers.setBanker(name, box.checked);
-                });
+            for (const account of accounts) {
+                this.ui.buildTemplate(template, container, [
+                    { selector: 'tr', account_name: account.name },
+                    { selector: '[data-for=name]', text: account.name },
+                    { selector: '[type=checkbox]', checked: this.bankers.isBanker(account.name) },
+                    { selector: 'input', value: account.balance }
+                ]);
             }
         };
 
-        input.addEventListener('blur', checkNames);
-        input.addEventListener('keyup', checkNames);
-        input.addEventListener('awesomplete-selectcomplete', checkNames);
+        // Searching for a single name
+        let checkNames = () => {
+            const name = input.value.toLocaleUpperCase().trim();
+            let accountFilter = (account: AccountArrayElement) => account.name.includes(name);
 
-        // Showing all players
-        (this.searchTab.querySelector('a') as HTMLAnchorElement).addEventListener('click', () => {
-            let html = `<h4 class="subtitle">Bankers</h4><ul style="padding-left: 1.5em;">`;
-            for (let name of this.bankers.getBankers().sort()) {
-                html += `<li>${stripHTML(name)}</li>`;
+            if (name === '') {
+                accountFilter = () => true;
+            } else if (name === 'IS:BANKER') {
+                const bankers = this.bankers.getBankers();
+                accountFilter = account => bankers.includes(account.name);
+            } else if (/balance:[<>]?\d+/i.test(name)) {
+                const result = name.match(/(\d+)/)!;
+                const amount = result ? +result[1] : 0;
+                if (name.includes('<')) {
+                    accountFilter = account => account.balance < amount;
+                } else if (name.includes('>')) {
+                    accountFilter = account => account.balance > amount;
+                } else {
+                    accountFilter = account => account.balance === amount;
+                }
             }
-            html += `</ul><h4 class="subtitle">All accounts:</h4><ul style="padding-left: 1.5em;">`;
 
-            let stored = this.accounts.getAll();
-            let accounts: (Account & { name: string })[] = [];
-            for (let name of Object.keys(stored)) {
-                accounts.push({...stored[name], name});
+            const accounts = this.accounts.getAll().filter(accountFilter);
+            if (accounts.length > 300) {
+                this.ui.notify(`Showing 300/${accounts.length} matches`);
+                accounts.length = 300;
             }
 
-            accounts.sort((a, b) => b.balance - a.balance);
+            showAccounts(accounts);
+        };
 
-            html += `<table class="table is-narrow"><thead><tr><th>Name</th><th>Balance</th></tr></thead><tbody>`;
-            for (let account of accounts) {
-                html += `<tr${this.bankers.isBanker(account.name) ? ' class="is-selected">' : '>'}<td>${stripHTML(account.name)}</td><td>${account.balance}</td></tr>`;
-            }
-            html += `</tbody></table>`;
+        input.addEventListener('input', debounce(checkNames, 300));
 
-            container.innerHTML = html;
+        // Deleting accounts
+        this.accountsTab.querySelector('button.is-danger')!.addEventListener('click', () => {
+            this.ui.alert(
+                'Are you sure? This will delete all accounts currently shown on the page.',
+                [{ text: 'Delete', style: 'is-danger'}, 'Cancel'],
+                response => {
+                    if (response !== 'Delete') return;
+                    const names = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'))
+                        .map(tr => tr.getAttribute('account_name')!);
+
+                    this.accounts.removeAccounts(names);
+                    checkNames();
+                }
+            );
         });
 
-        // Initialize searching autocomplete
-        loadJS('//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.js', 'Awesomplete')
-            .then(() => {
-                let names = Object.keys(this.accounts.getAll());
-                names.splice(names.indexOf('ACCOUNT_DOES_NOT_EXIST'), 1);
+        // Making accounts banker
+        this.accountsTab.addEventListener('change', event => {
+            const target = event.target as HTMLInputElement;
+            if (target.matches('[type=checkbox]')) {
+                const row = target.parentElement!.parentElement!.parentElement!;
+                this.bankers.setBanker(row.getAttribute('account_name') || '', target.checked);
+            }
+        });
 
-                new Awesomplete(input, {
-                    minChars: 1,
-                    maxItems: 8,
-                    autoFirst: false,
-                    list: names
-                });
-
-                input.disabled = false;
-                input.placeholder = 'Enter a name...';
-            });
+        checkNames();
     }
 
     initSettingsTab() {
         this.settingsTab = this.ui.addTab('Settings', 'banking');
         this.settingsTab.innerHTML = settingsHTML;
 
-        let currencyInput = this.settingsTab.querySelector('#biblio_banks_currency') as HTMLInputElement;
-        let limitInput = this.settingsTab.querySelector('#biblio_banks_limit') as HTMLInputElement;
+        let currencyInput = this.settingsTab.querySelector('input') as HTMLInputElement;
 
-        limitInput.value = this.storage.getObject('biblio_banks_limit', '100000000');
-        currencyInput.value = this.storage.getString('biblio_banks_currency', 'Server Coin');
+        currencyInput.value = this.storage.get('name', 'Server Coin');
 
         for (let el of this.settingsTab.querySelectorAll('[data-msg-key]') as NodeListOf<HTMLInputElement>) {
             el.value = this.messages.getMessage(el.dataset['msgKey'] as keyof Messages);
@@ -148,8 +148,7 @@ export class BankingTab {
                 this.messages.setMessage(el.dataset['msgKey'] as keyof Messages, el.value);
             }
 
-            this.storage.set('biblio_banks_currency', currencyInput.value);
-            this.storage.set('biblio_banks_limit', +limitInput.value);
+            this.storage.set('name', currencyInput.value);
         });
     }
 

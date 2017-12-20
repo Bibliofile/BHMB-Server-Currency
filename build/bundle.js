@@ -1,1 +1,593 @@
-!function(e){function t(a){if(n[a])return n[a].exports;var r=n[a]={i:a,l:!1,exports:{}};return e[a].call(r.exports,r,r.exports,t),r.l=!0,r.exports}var n={};t.m=e,t.c=n,t.i=function(e){return e},t.d=function(e,n,a){t.o(e,n)||Object.defineProperty(e,n,{configurable:!1,enumerable:!0,get:a})},t.n=function(e){var n=e&&e.__esModule?function(){return e.default}:function(){return e};return t.d(n,"a",n),n},t.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},t.p="",t(t.s=7)}([function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=n(8);t.AccountManager=a.AccountManager;var r=n(11);t.PermissionManager=r.PermissionManager;var o=n(10);t.MessageManager=o.MessageManager;var i=n(9);t.BankerManager=i.BankerManager},function(e,t,n){"use strict";var a=this&&this.__assign||Object.assign||function(e){for(var t,n=1,a=arguments.length;n<a;n++){t=arguments[n];for(var r in t)Object.prototype.hasOwnProperty.call(t,r)&&(e[r]=t[r])}return e},r=this&&this.__values||function(e){var t="function"==typeof Symbol&&e[Symbol.iterator],n=0;return t?t.call(e):{next:function(){return e&&n>=e.length&&(e=void 0),{value:e&&e[n++],done:!e}}}};Object.defineProperty(t,"__esModule",{value:!0});var o=n(6),i=n(3),s=n(4),l=n(5),c=function(){function e(e,t,n,a,r,i){this.ui=e,this.accounts=t,this.perms=n,this.bankers=a,this.messages=r,this.storage=i,this.ui.addTabGroup("Banking","banking"),this.initCommandTab(),o.loadCSS("//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.css"),this.initSearchTab(),this.initSettingsTab(),[this.commandTab,this.searchTab,this.settingsTab].forEach(function(e){e.classList.add("container")})}return e.prototype.initCommandTab=function(){var e=this;this.commandTab=this.ui.addTab("Commands","banking"),this.commandTab.innerHTML=i;try{for(var t=r(this.commandTab.querySelectorAll("[data-perm]")),n=t.next();!n.done;n=t.next()){var a=n.value;a.value=this.perms.getPerm(a.dataset.perm)}}catch(e){o={error:e}}finally{try{n&&!n.done&&(s=t.return)&&s.call(t)}finally{if(o)throw o.error}}this.commandTab.addEventListener("change",function(){try{for(var t=r(e.commandTab.querySelectorAll("[data-perm]")),n=t.next();!n.done;n=t.next()){var a=n.value;e.perms.setPerm(a.dataset.perm,a.value)}}catch(e){o={error:e}}finally{try{n&&!n.done&&(i=t.return)&&i.call(t)}finally{if(o)throw o.error}}var o,i});var o,s},e.prototype.initSearchTab=function(){var e=this;this.searchTab=this.ui.addTab("Search","banking"),this.searchTab.innerHTML=s;var t=this.searchTab.querySelector("input"),n=this.searchTab.querySelector("div"),i=function(){var a=t.value;if(e.accounts.canExist(a)){e.accounts.createIfDoesNotExist(a);var r=e.accounts.getBalance(a),i=o.stripHTML(a),s='<h4 class="subtitle">'+i+"'s Account:</h4>";s+="<p>Balance: "+r+"</p>",s+='<p><label class="checkbox"><input type="checkbox" '+(e.bankers.isBanker(a)?"checked":"")+"> Banker</label></p>",n.innerHTML=s;var l=n.querySelector("input");l.addEventListener("change",function(){e.bankers.setBanker(a,l.checked)})}};t.addEventListener("blur",i),t.addEventListener("keyup",i),t.addEventListener("awesomplete-selectcomplete",i),this.searchTab.querySelector("a").addEventListener("click",function(){var t='<h4 class="subtitle">Bankers</h4><ul style="padding-left: 1.5em;">';try{for(var i=r(e.bankers.getBankers().sort()),s=i.next();!s.done;s=i.next()){var l=s.value;t+="<li>"+o.stripHTML(l)+"</li>"}}catch(e){g={error:e}}finally{try{s&&!s.done&&(y=i.return)&&y.call(i)}finally{if(g)throw g.error}}t+='</ul><h4 class="subtitle">All accounts:</h4><ul style="padding-left: 1.5em;">';var c=e.accounts.getAll(),u=[];try{for(var d=r(Object.keys(c)),m=d.next();!m.done;m=d.next()){var p=m.value;u.push(a({},c[p],{name:p}))}}catch(e){v={error:e}}finally{try{m&&!m.done&&(k=d.return)&&k.call(d)}finally{if(v)throw v.error}}u.sort(function(e,t){return t.balance-e.balance}),t+='<table class="table is-narrow"><thead><tr><th>Name</th><th>Balance</th></tr></thead><tbody>';try{for(var b=r(u),h=b.next();!h.done;h=b.next()){var f=h.value;t+="<tr"+(e.bankers.isBanker(f.name)?' class="is-selected">':">")+"<td>"+o.stripHTML(f.name)+"</td><td>"+f.balance+"</td></tr>"}}catch(e){_={error:e}}finally{try{h&&!h.done&&(A=b.return)&&A.call(b)}finally{if(_)throw _.error}}t+="</tbody></table>",n.innerHTML=t;var g,y,v,k,_,A}),o.loadJS("//cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.1/awesomplete.min.js","Awesomplete").then(function(){var n=Object.keys(e.accounts.getAll());n.splice(n.indexOf("ACCOUNT_DOES_NOT_EXIST"),1),new Awesomplete(t,{minChars:1,maxItems:8,autoFirst:!1,list:n}),t.disabled=!1,t.placeholder="Enter a name..."})},e.prototype.initSettingsTab=function(){var e=this;this.settingsTab=this.ui.addTab("Settings","banking"),this.settingsTab.innerHTML=l;var t=this.settingsTab.querySelector("#biblio_banks_currency"),n=this.settingsTab.querySelector("#biblio_banks_limit");n.value=this.storage.getObject("biblio_banks_limit","100000000"),t.value=this.storage.getString("biblio_banks_currency","Server Coin");try{for(var a=r(this.settingsTab.querySelectorAll("[data-msg-key]")),o=a.next();!o.done;o=a.next()){var i=o.value;i.value=this.messages.getMessage(i.dataset.msgKey)}}catch(e){s={error:e}}finally{try{o&&!o.done&&(c=a.return)&&c.call(a)}finally{if(s)throw s.error}}this.settingsTab.addEventListener("change",function(){try{for(var a=r(e.settingsTab.querySelectorAll("[data-msg-key]")),o=a.next();!o.done;o=a.next()){var i=o.value;e.messages.setMessage(i.dataset.msgKey,i.value)}}catch(e){s={error:e}}finally{try{o&&!o.done&&(l=a.return)&&l.call(a)}finally{if(s)throw s.error}}e.storage.set("biblio_banks_currency",t.value),e.storage.set("biblio_banks_limit",+n.value);var s,l});var s,c},e.prototype.remove=function(){this.ui.removeTabGroup("banking")},e}();t.BankingTab=c},function(e,t){e.exports=global},function(e,t){e.exports='<h3 class="title">Commands</h3>\n<p>The following commands have been added to your world.</p>\n\n<ul style="padding-left: 1.5em;">\n    <li>/CHECK - Checks how much currency the user has.</li>\n    <li>/CHECK [name] - (<select class="select is-small" data-perm="check">\n        <option value="All">everyone</option>\n        <option value="Admin">admin only</option>\n        <option value="AdminBanker">admin &amp; banker only</option>\n        <option value="Banker">banker only</option>\n        <option value="Owner">owner only</option>\n    </select>) Checks how much currency [name] has.</li>\n    <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user&apos;s account to the [to] account.</li>\n    <li>/ADD [amount] [name] - (<select class="select is-small" data-perm="add">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Adds [amount] to [name]&apos;s account.</li>\n    <li>/ADDSILENT [amount] [name] - (<select class="select is-small" data-perm="silent">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\n    <li>/ADDDAILY [amount] [name] - (<select class="select is-small" data-perm="daily">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\n    <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\n    <li>/LASTDAILY [name] - (<select class="select is-small" data-perm="lastdaily">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Checks the last time [name] recieved a daily award.</li>\n    <li>/ADDONLINE [amount] - (<select class="select is-small" data-perm="online">\n        <option value="Admin">admin only</option>\n        <option value="AdminBanker">admin &amp; banker only</option>\n        <option value="Banker">banker only</option>\n        <option value="Owner">owner only</option>\n    </select> only) Adds [amount] to everyone who is online.</li>\n    <li>/REMOVE [amount] [name] - (<select class="select is-small" data-perm="remove">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Removes [amount] from [name]&apos;s account.</li>\n    <li>/BANKER [name] or /UNBANKER [name] - (<select class="select is-small" data-perm="banker">\n        <option value="Admin">admin</option>\n        <option value="AdminBanker">admin &amp; banker</option>\n        <option value="Banker">banker</option>\n        <option value="Owner">owner only</option>\n    </select> only) Adds or removes [name] to/from the banker list.</li>\n</ul>\n'},function(e,t){e.exports='<h3 class="title">Search</h3>\n<p>Use this tab to search for accounts. Players will not show up in autocomplete if they joined for the first time after you lauched the bot. To make them show up, reload the bot.</p>\n<p>\n    <input disabled class="input" placeholder="Loading..."> or <a>view all bank accounts</a>\n</p>\n<div></div>\n'},function(e,t){e.exports='<h3 class="title">General</h3>\n    <label>Currency Name:</label>\n    <input class="input" id="biblio_banks_currency">\n    <label>Account Currency Limit:</label>\n    <input class="input" id="biblio_banks_limit" max="100000000" min="0" type="number">\n\n<h3 class="title">Responses - Commands</h3>\n    <label>/CHECK:</label>\n    <input class="input" data-msg-key="check">\n    <label>/TRANSFER:</label>\n    <input class="input" data-msg-key="transfer">\n    <label>/ADD:</label>\n    <input class="input" data-msg-key="add">\n    <label>/ADDONLINE:</label>\n    <input class="input" data-msg-key="online">\n    <label>/ADDDAILY - Added:</label>\n    <input class="input" data-msg-key="daily_yes">\n    <label>/ADDDAILY - Already added:</label>\n    <input class="input" data-msg-key="daily_no">\n    <label>/LASTDAILY:</label>\n    <input class="input" data-msg-key="last_daily">\n    <label>/REMOVE:</label>\n    <input class="input" data-msg-key="remove">\n    <label>/BANKER - Added:</label>\n    <input class="input" data-msg-key="banker_yes">\n    <label>/BANKER - Already on list:</label>\n    <input class="input" data-msg-key="banker_on_list_already">\n    <label>/UNBANKER - Removed:</label>\n    <input class="input" data-msg-key="banker_no">\n    <label>/UNBANKER - Not a banker:</label>\n    <input class="input" data-msg-key="banker_not_on_list">\n\n<h3 class="title">Responses - Errors</h3>\n    <label>Account does not exist:</label>\n    <input class="input" data-msg-key="error_no_account">\n    <label>Account limit reached:</label>\n    <input class="input" data-msg-key="error_limit_reached">\n    <label>Insufficient funds:</label>\n    <input class="input" data-msg-key="error_funds">\n'},function(e,t,n){"use strict";function a(){for(var e=[],t=0;t<arguments.length;t++)e[t]=arguments[t];var n=new Set;try{for(var a=s(e),r=a.next();!r.done;r=a.next()){r.value.forEach(function(e){return n.add(e)})}}catch(e){o={error:e}}finally{try{r&&!r.done&&(i=a.return)&&i.call(a)}finally{if(o)throw o.error}}return Array.from(n.keys());var o,i}function r(e){return e.replace(/[&<>"'`=\/]/g,function(e){return l[e]})}function o(e){if(!document.querySelector('link[href="'+e+'"]')){var t=document.createElement("link");t.rel="stylesheet",t.href=e,document.head.appendChild(t)}}function i(e,t){if(!document.querySelector('script[src="'+e+'"]')){var n=document.createElement("script");n.src=e,document.head.appendChild(n)}return new Promise(function(e){var n=function(){window[t]?e():setTimeout(n,500)};n()})}var s=this&&this.__values||function(e){var t="function"==typeof Symbol&&e[Symbol.iterator],n=0;return t?t.call(e):{next:function(){return e&&n>=e.length&&(e=void 0),{value:e&&e[n++],done:!e}}}};Object.defineProperty(t,"__esModule",{value:!0}),t.merge=a;var l={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60;","=":"&#x3D;"};t.stripHTML=r,t.loadCSS=o,t.loadJS=i},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=n(2),r=n(1),o=n(0);a.MessageBot.registerExtension("bibliofile/banking",function(e,t){function n(e,t){switch(t){case"All":return!0;case"Owner":return e.isOwner();case"AdminBanker":return e.isAdmin()||p.isBanker(e.getName());case"Banker":return p.isBanker(e.getName());case"Admin":return e.isAdmin();default:return!1}}function a(e){var t=e.player,n=e.command,a=e.args,r=c.get(n.toLocaleLowerCase());r&&r(t,a)}var i=t.storage;!function(){var e=i.getObject("biblio_banks_migration",0,!1);0==e&&(i.clearNamespace("biblio_banks_version"),e++),1==e&&(i.migrate("biblio_banks_accounts",function(e){return Object.keys(e).forEach(function(t){e[t].balance=e[t].balance||0}),e}),e++),2!=e&&3!=e||(i.migrate("biblio_banks_messages",function(e){return Object.keys(e).forEach(function(t){e[t]=e[t].replace(/ammount/g,"amount").replace(/recieved/g,"received")}),e}),e++),i.set("biblio_banks_migration",3,!1)}();var s=function(){return i.getString("biblio_banks_currency","Server Coin")},l=function(){return i.getObject("biblio_banks_limit",1e8)},c=new Map,u=new o.AccountManager(i,t),d=new o.MessageManager(i),m=new o.PermissionManager(i),p=new o.BankerManager(i);if(c.set("check",function(t,a){var r=t.getName();if(a&&n(t,m.getPerm("check"))&&(r=a.toLocaleUpperCase()),!u.canExist(r))return void e.bot.send(d.getMessage("error_no_account"),{name:r,command:"check"});u.createIfDoesNotExist(r),e.bot.send(d.getMessage("check"),{name:r,amount:u.getBalance(r)+"",currency:s()})}),c.set("transfer",function(t,n){var a=n.match(/([1-9]\d*) (.+)/);if(a){u.createIfDoesNotExist(t.getName());var r=+a[1],o=a[2],i=t.getName();if(u.getBalance(i)<r)return void e.bot.send(d.getMessage("error_funds"),{currency:s()});if(!u.canExist(o))return void e.bot.send(d.getMessage("error_no_account"),{name:o,command:"transfer"});if(u.createIfDoesNotExist(o),u.getBalance(o)+r>l())return void e.bot.send(d.getMessage("error_limit_reached"),{currency:s()});u.transfer(i,o,r),e.bot.send(d.getMessage("transfer"),{FROM:i,From:i[0]+i.substr(1).toLocaleLowerCase(),from:i.toLocaleLowerCase(),TO:o,To:o[0]+o.substr(1).toLocaleLowerCase(),to:o.toLocaleLowerCase(),amount:r+"",currency:s()})}}),c.set("add",function(t,a){var r=a.match(/([1-9]\d*) (.+)/);if(r&&n(t,m.getPerm("add"))){var o=+r[1],i=r[2];if(!u.canExist(i))return void e.bot.send(d.getMessage("error_no_account"),{command:"add"});if(u.createIfDoesNotExist(i),u.getBalance(i)+o>l())return void e.bot.send(d.getMessage("error_limit_reached"),{currency:s(),name:i});u.deposit(i,o),e.bot.send(d.getMessage("add"),{currency:s(),amount:String(o),name:i})}}),c.set("addsilent",function(e,t){var a=t.match(/([1-9]\d*) (.+)/);if(a&&n(e,m.getPerm("silent"))){var r=+a[1],o=a[2];u.canExist(o)&&(u.createIfDoesNotExist(o),u.getBalance(o)+r>l()||u.deposit(o,r))}}),c.set("adddaily",function(t,a){var r=a.match(/([1-9]\d*) (.+)/);if(r&&n(t,m.getPerm("daily"))){var o=+r[1],i=r[2];if(!u.canExist(i))return void e.bot.send(d.getMessage("error_no_account"),{command:"adddaily"});u.createIfDoesNotExist(i);u.getLastDaily(i)/1e3/60/60/24<Date.now()/1e3/60/60/24-1?(u.deposit(i,o),u.updateLastDaily(i),e.bot.send(d.getMessage("daily_yes"),{amount:String(o),currency:s(),name:i})):e.bot.send(d.getMessage("daily_no"),{amount:String(o),currency:s(),name:i})}}),c.set("lastdaily",function(t,a){var r=t.getName();if(a&&n(t,m.getPerm("lastdaily"))&&(r=a),!u.canExist(r))return void e.bot.send(d.getMessage("error_no_account"),{command:"lastdaily"});e.bot.send(d.getMessage("last_daily"),{time:new Date(u.getLastDaily(r)).toString(),name:r})}),c.set("remove",function(t,a){var r=a.match(/([1-9]\d*) (.+)/);if(r&&n(t,m.getPerm("remove"))){var o=+r[1],i=r[2];if(!u.canExist(i))return void e.bot.send(d.getMessage("error_no_account"),{command:"remove"});u.createIfDoesNotExist(i),u.getBalance(i)-o<0||(u.withdraw(i,o),e.bot.send(d.getMessage("remove"),{amount:String(o),currency:s(),name:i}))}}),c.set("addonline",function(a,r){var o=+r;isNaN(o)||n(a,m.getPerm("online"))&&(t.getOverview().then(function(e){e.online.forEach(function(e){u.createIfDoesNotExist(e),u.getBalance(e)+o<=l()&&u.deposit(e,o)})}),e.bot.send(d.getMessage("online"),{amount:String(o),currency:s()}))}),c.set("banker",function(t,a){if(n(t,m.getPerm("banker"))){var r=a.toLocaleUpperCase();if(!u.canExist(r))return void e.bot.send(d.getMessage("error_no_account"),{command:"banker"});p.isBanker(r)?e.bot.send(d.getMessage("banker_on_list_already"),{name:r}):(p.setBanker(r,!0),e.bot.send(d.getMessage("banker_yes"),{name:r}))}}),c.set("unbanker",function(t,a){if(n(t,m.getPerm("banker"))){var r=a;p.isBanker(r)?(p.setBanker(r,!1),e.bot.send(d.getMessage("banker_no"),{name:r})):e.bot.send(d.getMessage("banker_not_on_list"),{name:r})}}),t.onCommand.sub(a),e.uninstall=function(){i.clearNamespace("biblio_banks"),t.onCommand.unsub(a)},!e.isNode&&e.bot.getExports("ui")){var b=new r.BankingTab(e.bot.getExports("ui"),u,m,p,d,i);e.uninstall=function(){b.remove(),i.clearNamespace("biblio_banks"),t.onCommand.unsub(a)}}})},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=function(){function e(e,t){this.storage=e,this.world=t,this.id="biblio_banks_accounts",this.defaults={SERVER:{balance:0},ACCOUNT_DOES_NOT_EXIST:{balance:-1/0}}}return e.prototype.getItem=function(e){return e=e.toLocaleUpperCase(),this.storage.getObject(this.id,this.defaults)[e]||this.defaults[e]||this.defaults.ACCOUNT_DOES_NOT_EXIST},e.prototype.setItem=function(e,t){if("ACCOUNT_DOES_NOT_EXIST"!=(e=e.toLocaleUpperCase())){var n=this.storage.getObject(this.id,this.defaults);n[e]=t,delete n.ACCOUNT_DOES_NOT_EXIST,this.storage.set(this.id,n)}},e.prototype.deposit=function(e,t){var n=this.getItem(e);n.balance+=t,this.setItem(e,n)},e.prototype.withdraw=function(e,t){this.deposit(e,-t)},e.prototype.transfer=function(e,t,n){this.withdraw(e,n),this.deposit(t,n)},e.prototype.getBalance=function(e){return this.getItem(e).balance},e.prototype.getLastDaily=function(e){return this.getItem(e).last_daily_award||0},e.prototype.updateLastDaily=function(e){var t=this.getItem(e);t.last_daily_award=Date.now(),this.setItem(e,t)},e.prototype.canExist=function(e){return isFinite(this.getBalance(e))||this.world.getPlayer(e).hasJoined()},e.prototype.createIfDoesNotExist=function(e){e=e.toLocaleUpperCase(),isFinite(this.getBalance(e))||this.setItem(e,{balance:0})},e.prototype.getAll=function(){return this.storage.getObject(this.id,this.defaults)},e}();t.AccountManager=a},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=function(){function e(e){this.storage=e,this.id="biblio_banks_bankers",this.default=[]}return e.prototype.isBanker=function(e){return this.storage.getObject(this.id,[]).includes(e.toLocaleUpperCase())},e.prototype.setBanker=function(e,t){e=e.toLocaleUpperCase();var n=this.storage.getObject(this.id,[]);t&&!n.includes(e)?n.push(e):!t&&n.includes(e)&&n.splice(n.indexOf(e),1),this.storage.set(this.id,n)},e.prototype.getBankers=function(){return this.storage.getObject(this.id,[])},e}();t.BankerManager=a},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=function(){function e(e){this.storage=e,this.id="biblio_banks_messages",this.defaults={check:"{{Name}} currently has {{amount}} {{currency}}.",transfer:"Transferred {{amount}} {{currency}} from {{From}} to {{To}}.",add:"Added {{amount}} {{currency}} to {{Name}}.",online:"Everyone online has received {{amount}} {{currency}}!",daily_yes:"Added daily reward of {{currency}} to {{Name}}.",daily_no:"{{Name}} has already received their daily reward.",last_daily:"{{Name}} last received a daily award at {{time}}",remove:"Removed {{amount}} {{currency}} from {{Name}}.",banker_yes:"{{Name}} has been added to the banker list.",banker_on_list_already:"{{Name}} was already on the banker list.",banker_no:"{{Name}} has been removed from the banker list.",banker_not_on_list:"{{Name}} was not on the banker list.",error_no_account:"Error: unable to {{command}}, the specified account does not exist.",error_limit_reached:"Error: {{Name}} can't have more {{currency}} added to their account.",error_funds:"Error: {{Name}} does not have enough {{currency}} to transfer funds."}}return e.prototype.getMessage=function(e){return this.storage.getObject(this.id,this.defaults)[e]||this.defaults[e]},e.prototype.setMessage=function(e,t){var n=this.storage.getObject(this.id,this.defaults);n[e]=t,this.storage.set(this.id,n)},e.prototype.keys=function(){return Object.keys(this.defaults)},e}();t.MessageManager=a},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var a=function(){function e(e){this.storage=e,this.id="biblio_banks_perms",this.defaults={check:"All",add:"AdminBanker",silent:"AdminBanker",daily:"AdminBanker",lastdaily:"AdminBanker",online:"AdminBanker",remove:"AdminBanker",banker:"Admin"}}return e.prototype.getPerm=function(e){return this.storage.getObject(this.id,this.defaults)[e]||this.defaults[e]},e.prototype.setPerm=function(e,t){var n=this.storage.getObject(this.id,this.defaults);n[e]=t,this.storage.set(this.id,n)},e.prototype.keys=function(){return Object.keys(this.defaults)},e}();t.PermissionManager=a}]);
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('@bhmb/bot')) :
+	typeof define === 'function' && define.amd ? define(['@bhmb/bot'], factory) :
+	(factory(global['@bhmb/bot']));
+}(this, (function (bot) { 'use strict';
+
+var commandsHTML = "<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">Commands</h3>\r\n    <p>The following commands have been added to your world.</p>\r\n\r\n    <ul style=\"padding-left: 1.5em;\">\r\n        <li>/CHECK - Checks how much currency the user has.</li>\r\n        <li>/CHECK [name] - (<select class=\"select is-small\" data-perm=\"check\">\r\n            <option value=\"All\">everyone</option>\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Checks how much currency [name] has.</li>\r\n        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>\r\n        <li>/ADD [amount] [name] - (<select class=\"select is-small\" data-perm=\"add\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account.</li>\r\n        <li>/ADDSILENT [amount] [name] - (<select class=\"select is-small\" data-perm=\"silent\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\r\n        <li>/ADDDAILY [amount] [name] - (<select class=\"select is-small\" data-perm=\"daily\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\r\n        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\r\n        <li>/LASTDAILY [name] - (<select class=\"select is-small\" data-perm=\"lastdaily\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Checks the last time [name] recieved a daily award.</li>\r\n        <li>/ADDONLINE [amount] - (<select class=\"select is-small\" data-perm=\"online\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to everyone who is online.</li>\r\n        <li>/REMOVE [amount] [name] - (<select class=\"select is-small\" data-perm=\"remove\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Removes [amount] from [name]&apos;s account.</li>\r\n        <li>/BANKER [name] or /UNBANKER [name] - (<select class=\"select is-small\" data-perm=\"banker\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds or removes [name] to/from the banker list.</li>\r\n    </ul>\r\n\r\n</div>\r\n";
+
+var accountsHTML = "<template>\r\n    <tr>\r\n        <td data-for=\"name\"></td>\r\n        <td>\r\n            <input type=\"number\" class=\"input is-small\">\r\n        </td>\r\n        <td>\r\n            <label>\r\n                Banker:\r\n                <input type=\"checkbox\">\r\n            </label>\r\n        </td>\r\n    </tr>\r\n</template>\r\n\r\n<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">Accounts</h3>\r\n    <div class=\"content\">\r\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\r\n        <p>For the following special searches, you cannot use spaces.</p>\r\n        <ul>\r\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\r\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\r\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\r\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\r\n        </ul>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <div class=\"columns\">\r\n        <div class=\"column\">\r\n            <input class=\"input\" placeholder=\"Enter a name...\">\r\n        </div>\r\n        <div class=\"column is-narrow\">\r\n            <button class=\"button is-danger\">Delete accounts</button>\r\n        </div>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <table class=\"table is-fullwidth is-striped\">\r\n        <thead>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </thead>\r\n        <tfoot>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </tfoot>\r\n        <tbody>\r\n\r\n        </tbody>\r\n    </table>\r\n</div>\r\n";
+
+var settingsHTML = "<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">General</h3>\r\n        <label>Currency Name:</label>\r\n        <input class=\"input\">\r\n\r\n    <h3 class=\"title\">Responses - Commands</h3>\r\n        <label>/CHECK:</label>\r\n        <input class=\"input\" data-msg-key=\"check\">\r\n        <label>/TRANSFER:</label>\r\n        <input class=\"input\" data-msg-key=\"transfer\">\r\n        <label>/ADD:</label>\r\n        <input class=\"input\" data-msg-key=\"add\">\r\n        <label>/ADDONLINE:</label>\r\n        <input class=\"input\" data-msg-key=\"online\">\r\n        <label>/ADDDAILY - Added:</label>\r\n        <input class=\"input\" data-msg-key=\"daily_yes\">\r\n        <label>/ADDDAILY - Already added:</label>\r\n        <input class=\"input\" data-msg-key=\"daily_no\">\r\n        <label>/LASTDAILY:</label>\r\n        <input class=\"input\" data-msg-key=\"last_daily\">\r\n        <label>/REMOVE:</label>\r\n        <input class=\"input\" data-msg-key=\"remove\">\r\n        <label>/BANKER - Added:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_yes\">\r\n        <label>/BANKER - Already on list:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_on_list_already\">\r\n        <label>/UNBANKER - Removed:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_no\">\r\n        <label>/UNBANKER - Not a banker:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_not_on_list\">\r\n\r\n    <h3 class=\"title\">Responses - Errors</h3>\r\n        <label>Account does not exist:</label>\r\n        <input class=\"input\" data-msg-key=\"error_no_account\">\r\n        <label>Account limit reached:</label>\r\n        <input class=\"input\" data-msg-key=\"error_limit_reached\">\r\n        <label>Insufficient funds:</label>\r\n        <input class=\"input\" data-msg-key=\"error_funds\">\r\n\r\n    <br>\r\n    <br>\r\n</div>\r\n";
+
+function debounce(fn, delay) {
+    let timeout = 0;
+    const run = () => {
+        fn();
+        timeout = 0;
+    };
+    return () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(run, delay);
+    };
+}
+
+class BankingTab {
+    constructor(ui, accounts, perms, bankers, messages, storage) {
+        this.ui = ui;
+        this.accounts = accounts;
+        this.perms = perms;
+        this.bankers = bankers;
+        this.messages = messages;
+        this.storage = storage;
+        this.ui.addTabGroup('Banking', 'banking');
+        this.initCommandTab();
+        this.initAccountsTab();
+        this.initSettingsTab();
+    }
+    initCommandTab() {
+        this.commandTab = this.ui.addTab('Commands', 'banking');
+        this.commandTab.innerHTML = commandsHTML;
+        for (let el of this.commandTab.querySelectorAll('[data-perm]')) {
+            el.value = this.perms.getPerm(el.dataset['perm']);
+        }
+        this.commandTab.addEventListener('change', () => {
+            for (let el of this.commandTab.querySelectorAll('[data-perm]')) {
+                this.perms.setPerm(el.dataset['perm'], el.value);
+            }
+        });
+    }
+    initAccountsTab() {
+        this.accountsTab = this.ui.addTab('Accounts', 'banking');
+        this.accountsTab.innerHTML = accountsHTML;
+        const input = this.accountsTab.querySelector('input');
+        const container = this.accountsTab.querySelector('tbody');
+        const template = this.accountsTab.querySelector('template');
+        const showAccounts = (accounts) => {
+            container.innerHTML = '';
+            for (const account of accounts) {
+                this.ui.buildTemplate(template, container, [
+                    { selector: 'tr', account_name: account.name },
+                    { selector: '[data-for=name]', text: account.name },
+                    { selector: '[type=checkbox]', checked: this.bankers.isBanker(account.name) },
+                    { selector: 'input', value: account.balance }
+                ]);
+            }
+        };
+        // Searching for a single name
+        let checkNames = () => {
+            const name = input.value.toLocaleUpperCase().trim();
+            let accountFilter = (account) => account.name.includes(name);
+            if (name === '') {
+                accountFilter = () => true;
+            }
+            else if (name === 'IS:BANKER') {
+                const bankers = this.bankers.getBankers();
+                accountFilter = account => bankers.includes(account.name);
+            }
+            else if (/balance:[<>]?\d+/i.test(name)) {
+                const result = name.match(/(\d+)/);
+                const amount = result ? +result[1] : 0;
+                if (name.includes('<')) {
+                    accountFilter = account => account.balance < amount;
+                }
+                else if (name.includes('>')) {
+                    accountFilter = account => account.balance > amount;
+                }
+                else {
+                    accountFilter = account => account.balance === amount;
+                }
+            }
+            const accounts = this.accounts.getAll().filter(accountFilter);
+            if (accounts.length > 300) {
+                this.ui.notify(`Showing 300/${accounts.length} matches`);
+                accounts.length = 300;
+            }
+            showAccounts(accounts);
+        };
+        input.addEventListener('input', debounce(checkNames, 300));
+        // Deleting accounts
+        this.accountsTab.querySelector('button.is-danger').addEventListener('click', () => {
+            this.ui.alert('Are you sure? This will delete all accounts currently shown on the page.', [{ text: 'Delete', style: 'is-danger' }, 'Cancel'], response => {
+                if (response !== 'Delete')
+                    return;
+                const names = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'))
+                    .map(tr => tr.getAttribute('account_name'));
+                this.accounts.removeAccounts(names);
+                checkNames();
+            });
+        });
+        // Making accounts banker
+        this.accountsTab.addEventListener('change', event => {
+            const target = event.target;
+            if (target.matches('[type=checkbox]')) {
+                const row = target.parentElement.parentElement.parentElement;
+                this.bankers.setBanker(row.getAttribute('account_name') || '', target.checked);
+            }
+        });
+        checkNames();
+    }
+    initSettingsTab() {
+        this.settingsTab = this.ui.addTab('Settings', 'banking');
+        this.settingsTab.innerHTML = settingsHTML;
+        let currencyInput = this.settingsTab.querySelector('input');
+        currencyInput.value = this.storage.get('name', 'Server Coin');
+        for (let el of this.settingsTab.querySelectorAll('[data-msg-key]')) {
+            el.value = this.messages.getMessage(el.dataset['msgKey']);
+        }
+        this.settingsTab.addEventListener('change', () => {
+            for (let el of this.settingsTab.querySelectorAll('[data-msg-key]')) {
+                this.messages.setMessage(el.dataset['msgKey'], el.value);
+            }
+            this.storage.set('name', currencyInput.value);
+        });
+    }
+    remove() {
+        this.ui.removeTabGroup('banking');
+    }
+}
+
+class AccountManager {
+    constructor(storage, world) {
+        this.storage = storage;
+        this.world = world;
+        this.id = 'accounts';
+        this.defaults = {
+            'SERVER': { balance: 0 }
+        };
+        this.deposit = (name, amount) => {
+            this.checkDeposit(name, amount);
+            this.updateAccount(name, { balance: this.getBalance(name) + amount });
+        };
+        this.withdraw = (name, amount) => {
+            this.checkWithdraw(name, amount);
+            this.updateAccount(name, { balance: this.getBalance(name) - amount });
+        };
+        this.transfer = (from, to, amount) => {
+            this.checkDeposit(to, amount);
+            this.checkWithdraw(from, amount);
+            this.withdraw(from, amount);
+            this.deposit(to, amount);
+        };
+        this.getBalance = (name) => {
+            return this.getAccount(name).balance;
+        };
+        this.getLastDaily = (name) => {
+            return this.getAccount(name).last_daily_award || 0;
+        };
+        this.updateLastDaily = (name) => {
+            this.updateAccount(name, { last_daily_award: Date.now() });
+        };
+        this.accountExists = (name) => {
+            try {
+                this.getAccount(name);
+                return true;
+            }
+            catch (_a) {
+                return false;
+            }
+        };
+    }
+    getAccounts() {
+        return this.storage.get(this.id, this.defaults);
+    }
+    getAccount(name) {
+        name = name.toLocaleUpperCase();
+        let stored = this.getAccounts();
+        if (!stored[name]) {
+            if (this.world.getPlayer(name).hasJoined) {
+                this.updateAccount(name, { balance: 0 });
+                return this.getAccount(name);
+            }
+            throw new Error(`The account for ${name} does not exist.`);
+        }
+        return stored[name];
+    }
+    updateAccount(key, info) {
+        key = key.toLocaleUpperCase();
+        const stored = this.getAccounts();
+        stored[key] = Object.assign({}, stored[key], info);
+        this.storage.set(this.id, stored);
+    }
+    removeAccounts(names) {
+        const stored = this.getAccounts();
+        names.forEach(name => delete stored[name]);
+        this.storage.set(this.id, stored);
+    }
+    checkDeposit(name, amount) {
+        if (this.getBalance(name) + amount > Number.MAX_SAFE_INTEGER) {
+            throw new Error(`Can't deposit funds for ${name}. Balance would exceed maximum value.`);
+        }
+    }
+    checkWithdraw(name, amount) {
+        if (this.getBalance(name) - amount < 0) {
+            throw new Error(`Balance for ${name} cannot be less than 0.`);
+        }
+    }
+    getAll() {
+        const accounts = [];
+        for (const [name, account] of Object.entries(this.getAccounts())) {
+            accounts.push(Object.assign({ name }, account));
+        }
+        return accounts.sort((a, b) => b.balance - a.balance);
+    }
+}
+
+class PermissionManager {
+    constructor(storage) {
+        this.storage = storage;
+        this.id = 'permissions';
+        this.defaults = {
+            check: 'All',
+            add: 'AdminBanker',
+            silent: 'AdminBanker',
+            daily: 'AdminBanker',
+            lastdaily: 'AdminBanker',
+            online: 'AdminBanker',
+            remove: 'AdminBanker',
+            banker: 'Admin',
+        };
+    }
+    getPerm(item) {
+        return this.getPerms()[item];
+    }
+    setPerm(item, value) {
+        const perms = this.getPerms();
+        perms[item] = value;
+        this.storage.set(this.id, perms);
+    }
+    keys() {
+        return Object.keys(this.defaults);
+    }
+    getPerms() {
+        return Object.assign({}, this.defaults, this.storage.get(this.id, this.defaults));
+    }
+}
+
+class MessageManager {
+    constructor(storage) {
+        this.storage = storage;
+        this.id = 'messages';
+        this.defaults = {
+            check: '{{Name}} currently has {{amount}} {{currency}}.',
+            transfer: 'Transferred {{amount}} {{currency}} from {{From}} to {{To}}.',
+            add: 'Added {{amount}} {{currency}} to {{Name}}.',
+            online: 'Everyone online has received {{amount}} {{currency}}!',
+            daily_yes: 'Added daily reward of {{currency}} to {{Name}}.',
+            daily_no: '{{Name}} has already received their daily reward.',
+            last_daily: '{{Name}} last received a daily award at {{time}}',
+            remove: 'Removed {{amount}} {{currency}} from {{Name}}.',
+            banker_yes: '{{Name}} has been added to the banker list.',
+            banker_on_list_already: '{{Name}} was already on the banker list.',
+            banker_no: '{{Name}} has been removed from the banker list.',
+            banker_not_on_list: '{{Name}} was not on the banker list.',
+            error_no_account: 'Error: unable to {{command}}, the specified account does not exist.',
+            error_limit_reached: 'Error: {{Name}} can\'t have more {{currency}} added to their account.',
+            error_funds: 'Error: {{Name}} does not have enough {{currency}} to transfer funds.',
+        };
+    }
+    getMessage(item) {
+        return this.getMessages()[item];
+    }
+    setMessage(item, message) {
+        const messages = this.getMessages();
+        messages[item] = message;
+        this.storage.set(this.id, messages);
+    }
+    keys() {
+        return Object.keys(this.defaults);
+    }
+    getMessages() {
+        return Object.assign({}, this.defaults, this.storage.get(this.id, this.defaults));
+    }
+}
+
+class BankerManager {
+    constructor(storage) {
+        this.storage = storage;
+        this.id = 'bankers';
+        this.default = [];
+    }
+    isBanker(name) {
+        return this.getBankers().includes(name.toLocaleUpperCase());
+    }
+    setBanker(name, isBanker) {
+        name = name.toLocaleUpperCase();
+        const bankers = this.getBankers();
+        if (isBanker && !bankers.includes(name)) {
+            bankers.push(name);
+        }
+        else if (!isBanker && bankers.includes(name)) {
+            bankers.splice(bankers.indexOf(name), 1);
+        }
+        this.storage.set(this.id, bankers);
+    }
+    getBankers() {
+        return this.storage.get(this.id, []).filter(Boolean);
+    }
+}
+
+const currency_id = 'name';
+bot.MessageBot.registerExtension('bibliofile/banking', function (ex, world) {
+    const storage = ex.storage;
+    // Helpers
+    const getCurrencyName = () => storage.get(currency_id, 'Server Coin');
+    // Commands
+    const listeners = new Map();
+    const accounts = new AccountManager(storage, world);
+    const messages = new MessageManager(storage);
+    const permissions = new PermissionManager(storage);
+    const bankers = new BankerManager(storage);
+    function permissionCheck(player, perm) {
+        switch (perm) {
+            case 'All':
+                return true;
+            case 'Owner':
+                return player.isOwner;
+            case 'AdminBanker':
+                return player.isAdmin || bankers.isBanker(player.name);
+            case 'Banker':
+                return bankers.isBanker(player.name);
+            case 'Admin':
+                return player.isAdmin;
+            default:
+                return false;
+        }
+    }
+    listeners.set('check', (player, args) => {
+        let check = player.name;
+        if (args && permissionCheck(player, permissions.getPerm('check'))) {
+            check = args.toLocaleUpperCase();
+        }
+        try {
+            ex.bot.send(messages.getMessage('check'), {
+                name: check,
+                amount: accounts.getBalance(check) + '',
+                currency: getCurrencyName()
+            });
+        }
+        catch (_a) {
+            ex.bot.send(messages.getMessage('error_no_account'), {
+                name: check,
+                command: 'check'
+            });
+        }
+    });
+    listeners.set('transfer', (player, args) => {
+        const parts = args.match(/([1-9]\d*) (.+)/);
+        if (!parts) {
+            return;
+        }
+        const amount = +parts[1];
+        const to = parts[2];
+        const from = player.name;
+        // Does the player exist?
+        if (!accounts.accountExists(to)) {
+            ex.bot.send(messages.getMessage('error_no_account'), {
+                name: to,
+                command: 'transfer'
+            });
+            return;
+        }
+        try {
+            accounts.transfer(from, to, amount);
+        }
+        catch (error) {
+            const message = error.message.includes('max') ? 'error_limit_reached' : 'error_funds';
+            ex.bot.send(messages.getMessage(message), {
+                currency: getCurrencyName()
+            });
+            return;
+        }
+        // Let players know it worked
+        ex.bot.send(messages.getMessage('transfer'), {
+            FROM: from,
+            From: from[0] + from.substr(1).toLocaleLowerCase(),
+            from: from.toLocaleLowerCase(),
+            TO: to,
+            To: to[0] + to.substr(1).toLocaleLowerCase(),
+            to: to.toLocaleLowerCase(),
+            amount: amount + '',
+            currency: getCurrencyName(),
+        });
+    });
+    listeners.set('add', (player, args) => {
+        const parts = args.match(/([1-9]\d*) (.+)/);
+        if (!parts)
+            return;
+        if (!permissionCheck(player, permissions.getPerm('add')))
+            return;
+        let amount = +parts[1];
+        let to = parts[2];
+        try {
+            accounts.deposit(to, amount);
+        }
+        catch (error) {
+            const message = error.message.includes('max') ? 'error_limit_reached' : 'error_no_account';
+            ex.bot.send(messages.getMessage(message), {
+                command: 'add',
+                currency: getCurrencyName(),
+                name: to
+            });
+        }
+        ex.bot.send(messages.getMessage('add'), {
+            currency: getCurrencyName(),
+            amount: amount + '',
+            name: to,
+        });
+    });
+    listeners.set('addsilent', (player, args) => {
+        const parts = args.match(/([1-9]\d*) (.+)/);
+        if (!parts)
+            return;
+        if (!permissionCheck(player, permissions.getPerm('silent')))
+            return;
+        const amount = +parts[1];
+        const to = parts[2];
+        try {
+            accounts.deposit(to, amount);
+        }
+        catch (_a) {
+            // Fail silently
+        }
+    });
+    listeners.set('adddaily', (player, args) => {
+        const parts = args.match(/([1-9]\d*) (.+)/);
+        if (!parts)
+            return;
+        if (!permissionCheck(player, permissions.getPerm('daily')))
+            return;
+        const amount = +parts[1];
+        const to = parts[2];
+        if (!accounts.accountExists(to)) {
+            ex.bot.send(messages.getMessage('error_no_account'), { command: 'adddaily' });
+            return;
+        }
+        const lastAdd = accounts.getLastDaily(to);
+        // If it's been more than 24 hours
+        if (lastAdd / 1000 / 60 / 60 / 24 < Date.now() / 1000 / 60 / 60 / 24 - 1) {
+            accounts.deposit(to, amount);
+            accounts.updateLastDaily(to);
+            ex.bot.send(messages.getMessage('daily_yes'), {
+                amount: amount + '',
+                currency: getCurrencyName(),
+                name: to,
+            });
+        }
+        else {
+            ex.bot.send(messages.getMessage('daily_no'), {
+                amount: amount + '',
+                currency: getCurrencyName(),
+                name: to,
+            });
+        }
+    });
+    listeners.set('lastdaily', (player, args) => {
+        let check = player.name;
+        if (args && permissionCheck(player, permissions.getPerm('lastdaily'))) {
+            check = args;
+        }
+        if (!accounts.accountExists(check)) {
+            ex.bot.send(messages.getMessage('error_no_account'), { command: 'lastdaily' });
+            return;
+        }
+        ex.bot.send(messages.getMessage('last_daily'), {
+            time: (new Date(accounts.getLastDaily(check))).toString(),
+            name: check,
+        });
+    });
+    listeners.set('remove', (player, args) => {
+        const parts = args.match(/([1-9]\d*) (.+)/);
+        if (!parts)
+            return;
+        if (!permissionCheck(player, permissions.getPerm('remove')))
+            return;
+        const amount = +parts[1];
+        const from = parts[2];
+        if (!accounts.accountExists(from)) {
+            ex.bot.send(messages.getMessage('error_no_account'), { command: 'remove' });
+            return;
+        }
+        try {
+            accounts.withdraw(from, amount);
+        }
+        catch (_a) {
+            return;
+        }
+        ex.bot.send(messages.getMessage('remove'), {
+            amount: amount + '',
+            currency: getCurrencyName(),
+            name: from,
+        });
+    });
+    listeners.set('addonline', (player, args) => {
+        const amount = +args;
+        if (isNaN(amount))
+            return;
+        if (!permissionCheck(player, permissions.getPerm('online')))
+            return;
+        world.online.forEach(name => {
+            try {
+                accounts.deposit(name, amount);
+            }
+            catch (_a) {
+                // Ignore errors to avoid spam.
+            }
+        });
+        ex.bot.send(messages.getMessage('online'), {
+            amount: amount + '',
+            currency: getCurrencyName(),
+        });
+    });
+    listeners.set('banker', (player, args) => {
+        if (!permissionCheck(player, permissions.getPerm('banker'))) {
+            return;
+        }
+        const candidate = args.toLocaleUpperCase();
+        if (!accounts.accountExists(candidate)) {
+            ex.bot.send(messages.getMessage('error_no_account'), {
+                command: 'banker',
+            });
+            return;
+        }
+        if (!bankers.isBanker(candidate)) {
+            bankers.setBanker(candidate, true);
+            ex.bot.send(messages.getMessage('banker_yes'), { name: candidate });
+        }
+        else {
+            ex.bot.send(messages.getMessage('banker_on_list_already'), { name: candidate });
+        }
+    });
+    listeners.set('unbanker', (player, args) => {
+        if (!permissionCheck(player, permissions.getPerm('banker'))) {
+            return;
+        }
+        const demoted = args;
+        if (bankers.isBanker(demoted)) {
+            bankers.setBanker(demoted, false);
+            ex.bot.send(messages.getMessage('banker_no'), { name: demoted });
+        }
+        else {
+            ex.bot.send(messages.getMessage('banker_not_on_list'), { name: demoted });
+        }
+    });
+    function commandListener({ player, message }) {
+        const [command, ...args] = message.split(' ');
+        if (!command.startsWith('/'))
+            return;
+        const handler = listeners.get(command.substr(1).toLocaleLowerCase());
+        if (handler)
+            handler(player, args.join(' '));
+    }
+    world.onMessage.sub(commandListener);
+    // Right now the uninstall function only has to remove the listener & storage
+    ex.remove = () => world.onMessage.unsub(commandListener);
+    // Enter the land of the browsers
+    const ui = ex.bot.getExports('ui');
+    if (!ui)
+        return;
+    let tab = new BankingTab(ui, accounts, permissions, bankers, messages, storage);
+    ex.uninstall = () => {
+        tab.remove();
+        world.onMessage.unsub(commandListener);
+    };
+    ex.exports = {
+        deposit: accounts.deposit,
+        withdraw: accounts.withdraw,
+        transfer: accounts.transfer,
+        getBalance: accounts.getBalance
+    };
+});
+
+})));
+//# sourceMappingURL=bundle.js.map

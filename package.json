@@ -1,25 +1,21 @@
 {
-  "name": "bhmb-starter",
+  "name": "bibliofile-banking",
+  "exName": "bibliofile/banking",
   "version": "1.0.0",
-  "description": "A simple starter project to make it simpler to create extensions for the Blockheads MessageBot",
+  "description": "Server Currency",
   "main": "./build/bundle.js",
   "scripts": {
-    "build": "webpack --env --progress --config webpack.config.js",
-    "build:watch": "npm run build -- --watch",
-    "build:production": "npm run build -- -p",
-    "build:production:watch": "npm run build:production -- --watch"
+    "build": "rollup --config"
   },
   "author": "Bibliofile",
   "license": "ISC",
   "devDependencies": {
-    "babel-core": "^6.24.1",
-    "babel-loader": "^7.0.0",
-    "babel-preset-env": "^1.5.1",
-    "blockheads-messagebot": "git://github.com/Bibliofile/Blockheads-MessageBot#master",
-    "raw-loader": "^0.5.1",
-    "ts-loader": "^2.1.0",
-    "tslint": "^5.3.2",
-    "typescript": "^2.3.3",
-    "webpack": "^2.6.1"
+    "@bhmb/bot": "^7.0.9",
+    "@bhmb/ui": "^1.0.6",
+    "rollup": "^0.52.1",
+    "rollup-plugin-string": "^2.0.2",
+    "rollup-plugin-typescript2": "^0.8.4",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   }
 }

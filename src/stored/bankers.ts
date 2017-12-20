@@ -1,20 +1,19 @@
-import { Storage } from 'blockheads-messagebot';
+import { Storage } from '@bhmb/bot';
 
 export class BankerManager {
-    readonly id = 'biblio_banks_bankers';
+    readonly id = 'bankers';
     readonly default = [];
 
     constructor(private storage: Storage) { }
 
     isBanker(name: string) {
-        let bankers = this.storage.getObject(this.id, [] as string[]);
-        return bankers.includes(name.toLocaleUpperCase());
+        return this.getBankers().includes(name.toLocaleUpperCase());
     }
 
     setBanker(name: string, isBanker: boolean) {
         name = name.toLocaleUpperCase();
 
-        let bankers = this.storage.getObject(this.id, [] as string[]);
+        const bankers = this.getBankers();
         if (isBanker && !bankers.includes(name)) {
             bankers.push(name);
         } else if (!isBanker && bankers.includes(name)) {
@@ -25,6 +24,6 @@ export class BankerManager {
     }
 
     getBankers(): string[] {
-        return this.storage.getObject(this.id, [] as string[]);
+        return this.storage.get<string[]>(this.id, []).filter(Boolean);
     }
 }

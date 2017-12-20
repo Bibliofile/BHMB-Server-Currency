@@ -1,4 +1,4 @@
-import { Storage } from 'blockheads-messagebot';
+import { Storage } from '@bhmb/bot';
 
 export type PermissionValues = 'All' | 'AdminBanker' | 'Admin' | 'Owner' | 'Banker';
 
@@ -13,9 +13,8 @@ export interface Permissions {
     banker: PermissionValues;
 }
 
-
 export class PermissionManager {
-    readonly id = 'biblio_banks_perms';
+    readonly id = 'permissions';
     readonly defaults: Permissions = {
         check: 'All',
         add: 'AdminBanker',
@@ -30,19 +29,21 @@ export class PermissionManager {
     constructor(private storage: Storage) {}
 
     getPerm(item: keyof Permissions): PermissionValues {
-        let messages = this.storage.getObject(this.id, this.defaults);
-
-        return messages[item] || this.defaults[item];
+        return this.getPerms()[item];
     }
 
-    setPerm(item: keyof Permissions, message: PermissionValues) {
-        let messages = this.storage.getObject(this.id, this.defaults);
-        messages[item] = message;
+    setPerm(item: keyof Permissions, value: PermissionValues) {
+        const perms = this.getPerms();
+        perms[item] = value;
 
-        this.storage.set(this.id, messages);
+        this.storage.set(this.id, perms);
     }
 
     keys(): string[] {
         return Object.keys(this.defaults);
+    }
+
+    private getPerms(): Permissions {
+        return { ...this.defaults, ...this.storage.get(this.id, this.defaults) };
     }
 }

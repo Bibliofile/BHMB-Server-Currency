@@ -1,57 +1,61 @@
-<h3 class="title">Commands</h3>
-<p>The following commands have been added to your world.</p>
+<div class="container is-widescreen">
 
-<ul style="padding-left: 1.5em;">
-    <li>/CHECK - Checks how much currency the user has.</li>
-    <li>/CHECK [name] - (<select class="select is-small" data-perm="check">
-        <option value="All">everyone</option>
-        <option value="Admin">admin only</option>
-        <option value="AdminBanker">admin &amp; banker only</option>
-        <option value="Banker">banker only</option>
-        <option value="Owner">owner only</option>
-    </select>) Checks how much currency [name] has.</li>
-    <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user&apos;s account to the [to] account.</li>
-    <li>/ADD [amount] [name] - (<select class="select is-small" data-perm="add">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Adds [amount] to [name]&apos;s account.</li>
-    <li>/ADDSILENT [amount] [name] - (<select class="select is-small" data-perm="silent">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>
-    <li>/ADDDAILY [amount] [name] - (<select class="select is-small" data-perm="daily">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>
-    <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>
-    <li>/LASTDAILY [name] - (<select class="select is-small" data-perm="lastdaily">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Checks the last time [name] recieved a daily award.</li>
-    <li>/ADDONLINE [amount] - (<select class="select is-small" data-perm="online">
-        <option value="Admin">admin only</option>
-        <option value="AdminBanker">admin &amp; banker only</option>
-        <option value="Banker">banker only</option>
-        <option value="Owner">owner only</option>
-    </select> only) Adds [amount] to everyone who is online.</li>
-    <li>/REMOVE [amount] [name] - (<select class="select is-small" data-perm="remove">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Removes [amount] from [name]&apos;s account.</li>
-    <li>/BANKER [name] or /UNBANKER [name] - (<select class="select is-small" data-perm="banker">
-        <option value="Admin">admin</option>
-        <option value="AdminBanker">admin &amp; banker</option>
-        <option value="Banker">banker</option>
-        <option value="Owner">owner only</option>
-    </select> only) Adds or removes [name] to/from the banker list.</li>
-</ul>
+    <h3 class="title">Commands</h3>
+    <p>The following commands have been added to your world.</p>
+
+    <ul style="padding-left: 1.5em;">
+        <li>/CHECK - Checks how much currency the user has.</li>
+        <li>/CHECK [name] - (<select class="select is-small" data-perm="check">
+            <option value="All">everyone</option>
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Checks how much currency [name] has.</li>
+        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>
+        <li>/ADD [amount] [name] - (<select class="select is-small" data-perm="add">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Adds [amount] to [name]&apos;s account.</li>
+        <li>/ADDSILENT [amount] [name] - (<select class="select is-small" data-perm="silent">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>
+        <li>/ADDDAILY [amount] [name] - (<select class="select is-small" data-perm="daily">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>
+        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>
+        <li>/LASTDAILY [name] - (<select class="select is-small" data-perm="lastdaily">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Checks the last time [name] recieved a daily award.</li>
+        <li>/ADDONLINE [amount] - (<select class="select is-small" data-perm="online">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Adds [amount] to everyone who is online.</li>
+        <li>/REMOVE [amount] [name] - (<select class="select is-small" data-perm="remove">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Removes [amount] from [name]&apos;s account.</li>
+        <li>/BANKER [name] or /UNBANKER [name] - (<select class="select is-small" data-perm="banker">
+            <option value="Admin">admin</option>
+            <option value="AdminBanker">admin &amp; banker</option>
+            <option value="Banker">banker</option>
+            <option value="Owner">owner</option>
+        </select>) Adds or removes [name] to/from the banker list.</li>
+    </ul>
+
+</div>

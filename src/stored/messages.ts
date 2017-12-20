@@ -1,4 +1,4 @@
-import { Storage } from 'blockheads-messagebot';
+import { Storage } from '@bhmb/bot';
 
 export interface Messages {
     check: string;
@@ -19,7 +19,7 @@ export interface Messages {
 }
 
 export class MessageManager {
-    private readonly id = 'biblio_banks_messages';
+    private readonly id = 'messages';
     private readonly defaults = {
         check: '{{Name}} currently has {{amount}} {{currency}}.',
         transfer: 'Transferred {{amount}} {{currency}} from {{From}} to {{To}}.',
@@ -41,13 +41,11 @@ export class MessageManager {
     constructor(private storage: Storage) {}
 
     getMessage(item: keyof Messages): string {
-        let messages = this.storage.getObject(this.id, this.defaults);
-
-        return messages[item] || this.defaults[item];
+        return this.getMessages()[item];
     }
 
     setMessage(item: keyof Messages, message: string) {
-        let messages = this.storage.getObject(this.id, this.defaults);
+        const messages = this.getMessages();
         messages[item] = message;
 
         this.storage.set(this.id, messages);
@@ -55,5 +53,9 @@ export class MessageManager {
 
     keys(): string[] {
         return Object.keys(this.defaults);
+    }
+
+    private getMessages(): Messages {
+        return { ...this.defaults, ...this.storage.get(this.id, this.defaults) };
     }
 }

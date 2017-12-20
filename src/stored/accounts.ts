@@ -1,88 +1,112 @@
-import { Storage, World } from 'blockheads-messagebot';
+import { Storage, World } from '@bhmb/bot';
 
 export interface Account {
     balance: number;
     last_daily_award?: number;
 }
 
+export type AccountArrayElement = Account & { name: string };
+export type AccountArray = AccountArrayElement[];
+
 export interface Accounts {
     [name: string]: Account;
 }
 
 export class AccountManager {
-    readonly id = 'biblio_banks_accounts';
+    readonly id = 'accounts';
     readonly defaults: Accounts = {
-        'SERVER': { balance: 0 },
-        'ACCOUNT_DOES_NOT_EXIST': {
-            balance: -Infinity
-        }
+        'SERVER': { balance: 0 }
     };
 
     constructor(private storage: Storage, private world: World) {}
 
-    // Override
-    getItem(key: string): Account {
-        key = key.toLocaleUpperCase();
-
-        let stored = this.storage.getObject(this.id, this.defaults);
-        return stored[key] || this.defaults[key] || (this.defaults.ACCOUNT_DOES_NOT_EXIST as Account);
+    private getAccounts(): Accounts {
+        return this.storage.get(this.id, this.defaults);
     }
 
-    // Override
-    setItem(key: string, item: Account): void {
+    private getAccount(name: string): Account {
+        name = name.toLocaleUpperCase();
+        let stored = this.getAccounts();
+        if (!stored[name]) {
+            if (this.world.getPlayer(name).hasJoined) {
+                this.updateAccount(name, { balance: 0 });
+                return this.getAccount(name);
+            }
+            throw new Error(`The account for ${name} does not exist.`);
+        }
+
+        return stored[name];
+    }
+
+    private updateAccount(key: string, info: Partial<Account>): void {
         key = key.toLocaleUpperCase();
 
-        if (key != 'ACCOUNT_DOES_NOT_EXIST') {
-            let stored = this.storage.getObject(this.id, this.defaults);
-            stored[key] = item;
-            delete stored['ACCOUNT_DOES_NOT_EXIST'];
-            this.storage.set(this.id, stored);
+        const stored = this.getAccounts();
+        stored[key] = { ...stored[key], ...info };
+        this.storage.set(this.id, stored);
+    }
+
+    removeAccounts(names: string[]): void {
+        const stored = this.getAccounts();
+        names.forEach(name => delete stored[name]);
+        this.storage.set(this.id, stored);
+    }
+
+    private checkDeposit(name: string, amount: number) {
+        if (this.getBalance(name) + amount > Number.MAX_SAFE_INTEGER) {
+            throw new Error(`Can't deposit funds for ${name}. Balance would exceed maximum value.`);
         }
     }
 
-    deposit(name: string, amount: number) {
-        let account = this.getItem(name);
-        account.balance += amount;
-        this.setItem(name, account);
+    deposit = (name: string, amount: number) => {
+        this.checkDeposit(name, amount);
+        this.updateAccount(name, { balance: this.getBalance(name) + amount });
     }
 
-    withdraw(name: string, amount: number) {
-        this.deposit(name, -amount);
+    private checkWithdraw(name: string, amount: number) {
+        if (this.getBalance(name) - amount < 0) {
+            throw new Error(`Balance for ${name} cannot be less than 0.`);
+        }
     }
 
-    transfer(from: string, to: string, amount: number) {
+    withdraw = (name: string, amount: number) => {
+        this.checkWithdraw(name, amount);
+        this.updateAccount(name, { balance: this.getBalance(name) - amount });
+    }
+
+    transfer = (from: string, to: string, amount: number) => {
+        this.checkDeposit(to, amount);
+        this.checkWithdraw(from, amount);
         this.withdraw(from, amount);
         this.deposit(to, amount);
     }
 
-    getBalance(name: string) {
-        return this.getItem(name).balance;
+    getBalance = (name: string) => {
+        return this.getAccount(name).balance;
     }
 
-    getLastDaily(name: string): number {
-        return this.getItem(name).last_daily_award || 0;
+    getLastDaily = (name: string): number => {
+        return this.getAccount(name).last_daily_award || 0;
     }
 
-    updateLastDaily(name: string) {
-        let account = this.getItem(name);
-        account.last_daily_award = Date.now();
-        this.setItem(name, account);
+    updateLastDaily = (name: string) => {
+        this.updateAccount(name, { last_daily_award: Date.now() });
     }
 
-    canExist(name: string): boolean {
-        return (isFinite(this.getBalance(name))) || this.world.getPlayer(name).hasJoined();
-    }
-
-    createIfDoesNotExist(name: string): void {
-        name = name.toLocaleUpperCase();
-        if (!isFinite(this.getBalance(name))) {
-            this.setItem(name, {
-                balance: 0
-            });
+    accountExists = (name: string): boolean => {
+        try {
+            this.getAccount(name);
+            return true;
+        } catch {
+            return false;
         }
     }
 
-    getAll(): Accounts {
-        return this.storage.getObject(this.id, this.defaults);
+    getAll(): AccountArray {
+        const accounts: AccountArray = [];
+        for (const [name, account] of Object.entries(this.getAccounts())) {
+            accounts.push({ name, ...account });
+        }
+        return accounts.sort((a, b) => b.balance - a.balance);
     }
 }

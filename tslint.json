@@ -2,7 +2,8 @@
     "rules": {
         "indent": [
             true,
-            "spaces"
+            "spaces",
+            4
         ],
         "no-duplicate-variable": true,
         "semicolon": [

@@ -23,33 +23,15 @@ export function stripHTML(html: string) {
     return html.replace(/[&<>"'`=\/]/g, s => entityMap[s]);
 }
 
-export function loadCSS(path: string): void {
-    // Already loaded?
-    if (document.querySelector(`link[href="${path}"]`)) {
-        return;
-    }
+export function debounce(fn: () => void, delay: number) {
+    let timeout = 0;
+    const run = () => {
+        fn();
+        timeout = 0;
+    };
 
-    let el = document.createElement('link');
-    el.rel = 'stylesheet';
-    el.href = path;
-    document.head.appendChild(el);
-}
-
-export function loadJS(path: string, exportName: string): Promise<void> {
-    if (!document.querySelector(`script[src="${path}"]`)) {
-        let el = document.createElement('script');
-        el.src = path;
-        document.head.appendChild(el);
-    }
-
-    return new Promise<void>(resolve => {
-        let check = () => {
-            if (!!(window as any)[exportName]) {
-                resolve();
-            } else {
-                setTimeout(check, 500);
-            }
-        };
-        check();
-    });
+    return () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(run, delay);
+    };
 }
