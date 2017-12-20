@@ -6,7 +6,7 @@
 
 var commandsHTML = "<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">Commands</h3>\r\n    <p>The following commands have been added to your world.</p>\r\n\r\n    <ul style=\"padding-left: 1.5em;\">\r\n        <li>/CHECK - Checks how much currency the user has.</li>\r\n        <li>/CHECK [name] - (<select class=\"select is-small\" data-perm=\"check\">\r\n            <option value=\"All\">everyone</option>\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Checks how much currency [name] has.</li>\r\n        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>\r\n        <li>/ADD [amount] [name] - (<select class=\"select is-small\" data-perm=\"add\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account.</li>\r\n        <li>/ADDSILENT [amount] [name] - (<select class=\"select is-small\" data-perm=\"silent\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\r\n        <li>/ADDDAILY [amount] [name] - (<select class=\"select is-small\" data-perm=\"daily\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\r\n        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\r\n        <li>/LASTDAILY [name] - (<select class=\"select is-small\" data-perm=\"lastdaily\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Checks the last time [name] recieved a daily award.</li>\r\n        <li>/ADDONLINE [amount] - (<select class=\"select is-small\" data-perm=\"online\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds [amount] to everyone who is online.</li>\r\n        <li>/REMOVE [amount] [name] - (<select class=\"select is-small\" data-perm=\"remove\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Removes [amount] from [name]&apos;s account.</li>\r\n        <li>/BANKER [name] or /UNBANKER [name] - (<select class=\"select is-small\" data-perm=\"banker\">\r\n            <option value=\"Admin\">admin</option>\r\n            <option value=\"AdminBanker\">admin &amp; banker</option>\r\n            <option value=\"Banker\">banker</option>\r\n            <option value=\"Owner\">owner</option>\r\n        </select>) Adds or removes [name] to/from the banker list.</li>\r\n    </ul>\r\n\r\n</div>\r\n";
 
-var accountsHTML = "<template>\r\n    <tr>\r\n        <td data-for=\"name\"></td>\r\n        <td>\r\n            <input type=\"number\" class=\"input is-small\">\r\n        </td>\r\n        <td>\r\n            <label>\r\n                Banker:\r\n                <input type=\"checkbox\">\r\n            </label>\r\n        </td>\r\n    </tr>\r\n</template>\r\n\r\n<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">Accounts</h3>\r\n    <div class=\"content\">\r\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\r\n        <p>For the following special searches, you cannot use spaces.</p>\r\n        <ul>\r\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\r\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\r\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\r\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\r\n        </ul>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <div class=\"columns\">\r\n        <div class=\"column\">\r\n            <input class=\"input\" placeholder=\"Enter a name...\" value=\"is:banker\">\r\n        </div>\r\n        <div class=\"column is-narrow\">\r\n            <button class=\"button is-danger\">Delete accounts</button>\r\n        </div>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <table class=\"table is-fullwidth is-striped\">\r\n        <thead>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </thead>\r\n        <tfoot>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </tfoot>\r\n        <tbody>\r\n\r\n        </tbody>\r\n    </table>\r\n</div>\r\n";
+var accountsHTML = "<template>\r\n    <tr>\r\n        <td data-for=\"name\"></td>\r\n        <td>\r\n            <input type=\"number\" class=\"input is-small\">\r\n        </td>\r\n        <td data-for=\"last_daily_award\"></td>\r\n        <td>\r\n            <label>\r\n                Banker:\r\n                <input type=\"checkbox\">\r\n            </label>\r\n        </td>\r\n    </tr>\r\n</template>\r\n\r\n<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">Accounts</h3>\r\n    <div class=\"content\">\r\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\r\n        <p>For the following special searches, you cannot use spaces.</p>\r\n        <ul>\r\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\r\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\r\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\r\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\r\n        </ul>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <div class=\"columns\">\r\n        <div class=\"column\">\r\n            <input class=\"input\" placeholder=\"Enter a name...\" value=\"is:banker\">\r\n        </div>\r\n        <div class=\"column is-narrow\">\r\n            <button class=\"button is-danger\">Delete accounts</button>\r\n        </div>\r\n    </div>\r\n\r\n    <span class=\"has-text-weight-bold\">Sort:</span>\r\n    <div class=\"control\">\r\n        <label class=\"radio\">\r\n            <input type=\"radio\" name=\"sort\" value=\"bal_d\" checked> Balance (most first)\r\n        </label>\r\n        <label class=\"radio\">\r\n            <input type=\"radio\" name=\"sort\" value=\"bal_a\"> Balance (least first)\r\n        </label>\r\n        <label class=\"radio\">\r\n            <input type=\"radio\" name=\"sort\" value=\"daily_d\"> Last daily award (recent first)\r\n        </label>\r\n        <label class=\"radio\">\r\n            <input type=\"radio\" name=\"sort\" value=\"daily_a\"> Last daily award (old first)\r\n        </label>\r\n    </div>\r\n\r\n    <br>\r\n\r\n    <table class=\"table is-fullwidth is-striped\">\r\n        <thead>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Last Daily</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </thead>\r\n        <tfoot>\r\n            <tr>\r\n                <th>Name</th>\r\n                <th>Balance</th>\r\n                <th>Last Daily</th>\r\n                <th>Actions</th>\r\n            </tr>\r\n        </tfoot>\r\n        <tbody>\r\n\r\n        </tbody>\r\n    </table>\r\n</div>\r\n";
 
 var settingsHTML = "<div class=\"container is-widescreen\">\r\n\r\n    <h3 class=\"title\">General</h3>\r\n        <label>Currency Name:</label>\r\n        <input class=\"input\">\r\n\r\n    <h3 class=\"title\">Responses - Commands</h3>\r\n        <label>/CHECK:</label>\r\n        <input class=\"input\" data-msg-key=\"check\">\r\n        <label>/TRANSFER:</label>\r\n        <input class=\"input\" data-msg-key=\"transfer\">\r\n        <label>/ADD:</label>\r\n        <input class=\"input\" data-msg-key=\"add\">\r\n        <label>/ADDONLINE:</label>\r\n        <input class=\"input\" data-msg-key=\"online\">\r\n        <label>/ADDDAILY - Added:</label>\r\n        <input class=\"input\" data-msg-key=\"daily_yes\">\r\n        <label>/ADDDAILY - Already added:</label>\r\n        <input class=\"input\" data-msg-key=\"daily_no\">\r\n        <label>/LASTDAILY:</label>\r\n        <input class=\"input\" data-msg-key=\"last_daily\">\r\n        <label>/REMOVE:</label>\r\n        <input class=\"input\" data-msg-key=\"remove\">\r\n        <label>/BANKER - Added:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_yes\">\r\n        <label>/BANKER - Already on list:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_on_list_already\">\r\n        <label>/UNBANKER - Removed:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_no\">\r\n        <label>/UNBANKER - Not a banker:</label>\r\n        <input class=\"input\" data-msg-key=\"banker_not_on_list\">\r\n\r\n    <h3 class=\"title\">Responses - Errors</h3>\r\n        <label>Account does not exist:</label>\r\n        <input class=\"input\" data-msg-key=\"error_no_account\">\r\n        <label>Account limit reached:</label>\r\n        <input class=\"input\" data-msg-key=\"error_limit_reached\">\r\n        <label>Insufficient funds:</label>\r\n        <input class=\"input\" data-msg-key=\"error_funds\">\r\n\r\n    <br>\r\n    <br>\r\n</div>\r\n";
 
@@ -53,19 +53,30 @@ class BankingTab {
         const input = this.accountsTab.querySelector('input');
         const container = this.accountsTab.querySelector('tbody');
         const template = this.accountsTab.querySelector('template');
+        function formatDate(epoch) {
+            if (!epoch)
+                return 'Never';
+            const date = new Date(epoch);
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        }
         const showAccounts = (accounts) => {
             container.innerHTML = '';
             for (const account of accounts) {
                 this.ui.buildTemplate(template, container, [
                     { selector: 'tr', account_name: account.name },
                     { selector: '[data-for=name]', text: account.name },
+                    { selector: '[data-for=last_daily_award]', text: formatDate(account.last_daily_award) },
                     { selector: '[type=checkbox]', checked: this.bankers.isBanker(account.name) },
                     { selector: 'input', value: account.balance }
                 ]);
             }
         };
+        const getSortType = () => {
+            return this.accountsTab.querySelector('[name=sort]:checked').value;
+        };
         // Searching for a single name
-        let checkNames = () => {
+        //tslint:disable-next-line
+        const checkNames = () => {
             const name = input.value.toLocaleUpperCase().trim();
             let accountFilter = (account) => account.name.includes(name);
             if (name === '') {
@@ -89,6 +100,35 @@ class BankingTab {
                 }
             }
             const accounts = this.accounts.getAll().filter(accountFilter);
+            // Sort
+            switch (getSortType()) {
+                case 'bal_d':
+                    accounts.sort((a, b) => b.balance - a.balance);
+                    break;
+                case 'bal_a':
+                    accounts.sort((a, b) => a.balance - b.balance);
+                    break;
+                case 'daily_d':
+                    accounts.sort((a, b) => {
+                        if (!a.last_daily_award)
+                            return 1;
+                        if (!b.last_daily_award)
+                            return -1;
+                        return b.last_daily_award - a.last_daily_award;
+                    });
+                    break;
+                case 'daily_a':
+                    accounts.sort((a, b) => {
+                        if (!a.last_daily_award)
+                            return 1;
+                        if (!b.last_daily_award)
+                            return -1;
+                        return a.last_daily_award - b.last_daily_award;
+                    });
+                    break;
+                default:
+                    break;
+            }
             if (accounts.length > 300) {
                 this.ui.notify(`Showing 300/${accounts.length} matches`);
                 accounts.length = 300;
@@ -96,6 +136,7 @@ class BankingTab {
             showAccounts(accounts);
         };
         input.addEventListener('input', debounce(checkNames, 300));
+        this.accountsTab.addEventListener('change', checkNames);
         // Deleting accounts
         this.accountsTab.querySelector('button.is-danger').addEventListener('click', () => {
             this.ui.alert('Are you sure? This will delete all accounts currently shown on the page.', [{ text: 'Delete', style: 'is-danger' }, 'Cancel'], response => {
@@ -219,7 +260,7 @@ class AccountManager {
         for (const [name, account] of Object.entries(this.getAccounts())) {
             accounts.push(Object.assign({ name }, account));
         }
-        return accounts.sort((a, b) => b.balance - a.balance);
+        return accounts;
     }
 }
 

@@ -57,6 +57,12 @@ export class BankingTab {
         const container = this.accountsTab.querySelector('tbody')!;
         const template = this.accountsTab.querySelector('template')!;
 
+        function formatDate(epoch: number | undefined): string {
+            if (!epoch) return 'Never';
+            const date = new Date(epoch);
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        }
+
         const showAccounts = (accounts: AccountArray) => {
             container.innerHTML = '';
 
@@ -64,14 +70,20 @@ export class BankingTab {
                 this.ui.buildTemplate(template, container, [
                     { selector: 'tr', account_name: account.name },
                     { selector: '[data-for=name]', text: account.name },
+                    { selector: '[data-for=last_daily_award]', text: formatDate(account.last_daily_award) },
                     { selector: '[type=checkbox]', checked: this.bankers.isBanker(account.name) },
                     { selector: 'input', value: account.balance }
                 ]);
             }
         };
 
+        const getSortType = (): 'bal_d' | 'bal_a' | 'daily_d' | 'daily_a' => {
+            return (<HTMLInputElement>this.accountsTab.querySelector('[name=sort]:checked')).value as any;
+        };
+
         // Searching for a single name
-        let checkNames = () => {
+        //tslint:disable-next-line
+        const checkNames = () => {
             const name = input.value.toLocaleUpperCase().trim();
             let accountFilter = (account: AccountArrayElement) => account.name.includes(name);
 
@@ -93,15 +105,44 @@ export class BankingTab {
             }
 
             const accounts = this.accounts.getAll().filter(accountFilter);
+
+            // Sort
+            switch (getSortType()) {
+                case 'bal_d':
+                    accounts.sort((a, b) => b.balance - a.balance);
+                    break;
+                case 'bal_a':
+                    accounts.sort((a, b) => a.balance - b.balance);
+                    break;
+                case 'daily_d':
+                    accounts.sort((a, b) => {
+                        if (!a.last_daily_award) return 1;
+                        if (!b.last_daily_award) return -1;
+                        return b.last_daily_award - a.last_daily_award;
+                    });
+                    break;
+                case 'daily_a':
+                    accounts.sort((a, b) => {
+                        if (!a.last_daily_award) return 1;
+                        if (!b.last_daily_award) return -1;
+                        return a.last_daily_award - b.last_daily_award;
+                    });
+                    break;
+                default:
+                    break;
+            }
+
             if (accounts.length > 300) {
                 this.ui.notify(`Showing 300/${accounts.length} matches`);
                 accounts.length = 300;
             }
 
+
             showAccounts(accounts);
         };
 
         input.addEventListener('input', debounce(checkNames, 300));
+        this.accountsTab.addEventListener('change', checkNames);
 
         // Deleting accounts
         this.accountsTab.querySelector('button.is-danger')!.addEventListener('click', () => {

@@ -107,6 +107,6 @@ export class AccountManager {
         for (const [name, account] of Object.entries(this.getAccounts())) {
             accounts.push({ name, ...account });
         }
-        return accounts.sort((a, b) => b.balance - a.balance);
+        return accounts;
     }
 }

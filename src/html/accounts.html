@@ -4,6 +4,7 @@
         <td>
             <input type="number" class="input is-small">
         </td>
+        <td data-for="last_daily_award"></td>
         <td>
             <label>
                 Banker:
@@ -38,6 +39,22 @@
         </div>
     </div>
 
+    <span class="has-text-weight-bold">Sort:</span>
+    <div class="control">
+        <label class="radio">
+            <input type="radio" name="sort" value="bal_d" checked> Balance (most first)
+        </label>
+        <label class="radio">
+            <input type="radio" name="sort" value="bal_a"> Balance (least first)
+        </label>
+        <label class="radio">
+            <input type="radio" name="sort" value="daily_d"> Last daily award (recent first)
+        </label>
+        <label class="radio">
+            <input type="radio" name="sort" value="daily_a"> Last daily award (old first)
+        </label>
+    </div>
+
     <br>
 
     <table class="table is-fullwidth is-striped">
@@ -45,6 +62,7 @@
             <tr>
                 <th>Name</th>
                 <th>Balance</th>
+                <th>Last Daily</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -52,6 +70,7 @@
             <tr>
                 <th>Name</th>
                 <th>Balance</th>
+                <th>Last Daily</th>
                 <th>Actions</th>
             </tr>
         </tfoot>
