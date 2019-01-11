@@ -89,6 +89,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         } catch (error) {
             const message = error.message.includes('max') ? 'error_limit_reached' : 'error_funds';
             ex.bot.send(messages.getMessage(message), {
+                name: from,
                 currency: getCurrencyName()
             });
             return;
@@ -157,7 +158,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         const to = parts[2];
 
         if (!accounts.accountExists(to)) {
-            ex.bot.send(messages.getMessage('error_no_account'), { command: 'adddaily'});
+            ex.bot.send(messages.getMessage('error_no_account'), { name: to, command: 'adddaily'});
             return;
         }
 
@@ -188,7 +189,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         }
 
         if (!accounts.accountExists(check)) {
-            ex.bot.send(messages.getMessage('error_no_account'), { command: 'lastdaily' });
+            ex.bot.send(messages.getMessage('error_no_account'), { name: check, command: 'lastdaily' });
             return;
         }
 
@@ -207,7 +208,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         const from = parts[2];
 
         if (!accounts.accountExists(from)) {
-            ex.bot.send(messages.getMessage('error_no_account'), { command: 'remove' });
+            ex.bot.send(messages.getMessage('error_no_account'), { name: from, command: 'remove' });
             return;
         }
 
@@ -252,6 +253,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
 
         if (!accounts.accountExists(candidate)) {
             ex.bot.send(messages.getMessage('error_no_account'), {
+                name: candidate,
                 command: 'banker',
             });
             return;
@@ -259,7 +261,7 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
 
         if (!bankers.isBanker(candidate)) {
             bankers.setBanker(candidate, true);
-            ex.bot.send(messages.getMessage('banker_yes'), {name: candidate });
+            ex.bot.send(messages.getMessage('banker_yes'), { name: candidate });
         } else {
             ex.bot.send(messages.getMessage('banker_on_list_already'), { name: candidate });
         }
