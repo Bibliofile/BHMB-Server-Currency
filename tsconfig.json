@@ -6,11 +6,10 @@
             "dom",
             "es7",
             "dom.iterable",
-            "scripthost",
             "es2017.object"
         ],
         "moduleResolution": "node",
-        "module": "commonjs",
+        "module": "esnext",
         "removeComments": false,
         "noUnusedLocals": true,
         "noUnusedParameters": true

@@ -16,9 +16,9 @@ import { AccountArray, AccountArrayElement } from './stored/accounts';
 import { debounce } from './helpers';
 
 export class BankingTab {
-    private commandTab: HTMLDivElement;
-    private accountsTab: HTMLDivElement;
-    private settingsTab: HTMLDivElement;
+    private commandTab!: HTMLDivElement;
+    private accountsTab!: HTMLDivElement;
+    private settingsTab!: HTMLDivElement;
 
     constructor(
         private ui: UIExtensionExports,
@@ -84,6 +84,13 @@ export class BankingTab {
         // Searching for a single name
         //tslint:disable-next-line
         const checkNames = () => {
+            // Update bankers
+            const rows = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'));
+            for (const row of rows) {
+                const banker = row.querySelector<HTMLInputElement>('input[type=checkbox]')!.checked;
+                this.bankers.setBanker(row.getAttribute('account_name')!, banker);
+            }
+
             const name = input.value.toLocaleUpperCase().trim();
             let accountFilter = (account: AccountArrayElement) => account.name.includes(name);
 

@@ -9,6 +9,8 @@ export default {
         format: 'umd',
         // For making debugging easier, fine to disable
         sourcemap: true,
+
+        globals: { '@bhmb/bot': '@bhmb/bot' }
     },
     plugins: [
         typescript(),
@@ -17,5 +19,4 @@ export default {
 
     // Settings to avoid warnings and configure correctly for browsers
     external: ['@bhmb/bot'],
-    globals: { '@bhmb/bot': '@bhmb/bot' }
 }

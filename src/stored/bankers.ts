@@ -14,10 +14,11 @@ export class BankerManager {
         name = name.toLocaleUpperCase();
 
         const bankers = this.getBankers();
-        if (isBanker && !bankers.includes(name)) {
+        const index = bankers.indexOf(name);
+        if (isBanker && index === -1) {
             bankers.push(name);
-        } else if (!isBanker && bankers.includes(name)) {
-            bankers.splice(bankers.indexOf(name), 1);
+        } else if (!isBanker && index !== -1) {
+            bankers.splice(index, 1);
         }
 
         this.storage.set(this.id, bankers);

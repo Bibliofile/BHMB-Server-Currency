@@ -10,12 +10,12 @@
   "author": "Bibliofile",
   "license": "ISC",
   "devDependencies": {
-    "@bhmb/bot": "^7.0.9",
-    "@bhmb/ui": "^1.0.6",
-    "rollup": "^0.52.1",
+    "@bhmb/bot": "^7.1.2",
+    "@bhmb/ui": "^1.0.9",
+    "rollup": "^1.1.0",
     "rollup-plugin-string": "^2.0.2",
-    "rollup-plugin-typescript2": "^0.8.4",
-    "tslint": "^5.8.0",
-    "typescript": "^2.6.2"
+    "rollup-plugin-typescript2": "^0.19.0",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.2"
   }
 }
