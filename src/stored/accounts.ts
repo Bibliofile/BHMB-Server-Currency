@@ -1,4 +1,5 @@
 import { Storage, World } from '@bhmb/bot';
+import { EventEmitter } from '../events';
 
 export interface Account {
     balance: number;
@@ -12,13 +13,15 @@ export interface Accounts {
     [name: string]: Account;
 }
 
-export class AccountManager {
+export class AccountManager extends EventEmitter<{ change: [string] }> {
     readonly id = 'accounts';
     readonly defaults: Accounts = {
         'SERVER': { balance: 0 }
     };
 
-    constructor(private storage: Storage, private world: World) {}
+    constructor(private storage: Storage, private world: World) {
+        super();
+    }
 
     private getAccounts(): Accounts {
         return this.storage.get(this.id, this.defaults);
@@ -44,6 +47,7 @@ export class AccountManager {
         const stored = this.getAccounts();
         stored[key] = { ...stored[key], ...info };
         this.storage.set(this.id, stored);
+        this.emit('change', key);
     }
 
     removeAccounts(names: string[]): void {
@@ -72,6 +76,10 @@ export class AccountManager {
     withdraw = (name: string, amount: number) => {
         this.checkWithdraw(name, amount);
         this.updateAccount(name, { balance: this.getBalance(name) - amount });
+    }
+
+    setBalance = (name: string, amount: number) => {
+        this.updateAccount(name, { balance: Math.max(amount, 0) });
     }
 
     transfer = (from: string, to: string, amount: number) => {

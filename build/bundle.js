@@ -6,7 +6,7 @@
 
     var commandsHTML = "<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Commands</h3>\n    <p>The following commands have been added to your world.</p>\n\n    <ul style=\"padding-left: 1.5em;\">\n        <li>/CHECK - Checks how much currency the user has.</li>\n        <li>/CHECK [name] - (<select class=\"select is-small\" data-perm=\"check\">\n            <option value=\"All\">everyone</option>\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks how much currency [name] has.</li>\n        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>\n        <li>/ADD [amount] [name] - (<select class=\"select is-small\" data-perm=\"add\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account.</li>\n        <li>/ADDSILENT [amount] [name] - (<select class=\"select is-small\" data-perm=\"silent\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\n        <li>/ADDDAILY [amount] [name] - (<select class=\"select is-small\" data-perm=\"daily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\n        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\n        <li>/LASTDAILY [name] - (<select class=\"select is-small\" data-perm=\"lastdaily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks the last time [name] recieved a daily award.</li>\n        <li>/ADDONLINE [amount] - (<select class=\"select is-small\" data-perm=\"online\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to everyone who is online.</li>\n        <li>/REMOVE [amount] [name] - (<select class=\"select is-small\" data-perm=\"remove\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Removes [amount] from [name]&apos;s account.</li>\n        <li>/BANKER [name] or /UNBANKER [name] - (<select class=\"select is-small\" data-perm=\"banker\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds or removes [name] to/from the banker list.</li>\n    </ul>\n\n</div>\n";
 
-    var accountsHTML = "<template>\n    <tr>\n        <td data-for=\"name\"></td>\n        <td>\n            <input type=\"number\" class=\"input is-small\">\n        </td>\n        <td data-for=\"last_daily_award\"></td>\n        <td>\n            <label>\n                Banker:\n                <input type=\"checkbox\">\n            </label>\n        </td>\n    </tr>\n</template>\n\n<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Accounts</h3>\n    <div class=\"content\">\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\n        <p>For the following special searches, you cannot use spaces.</p>\n        <ul>\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\n        </ul>\n    </div>\n\n    <br>\n\n    <div class=\"columns\">\n        <div class=\"column\">\n            <input class=\"input\" placeholder=\"Enter a name...\" value=\"is:banker\">\n        </div>\n        <div class=\"column is-narrow\">\n            <button class=\"button is-danger\">Delete accounts</button>\n        </div>\n    </div>\n\n    <span class=\"has-text-weight-bold\">Sort:</span>\n    <div class=\"control\">\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_d\" checked> Balance (most first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_a\"> Balance (least first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_d\"> Last daily award (recent first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_a\"> Last daily award (old first)\n        </label>\n    </div>\n\n    <br>\n\n    <table class=\"table is-fullwidth is-striped\">\n        <thead>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </thead>\n        <tfoot>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </tfoot>\n        <tbody>\n\n        </tbody>\n    </table>\n</div>\n";
+    var accountsHTML = "<template>\n    <tr>\n        <td data-for=\"name\"></td>\n        <td>\n            <input type=\"number\" class=\"input is-small\">\n        </td>\n        <td data-for=\"last_daily_award\"></td>\n        <td>\n            <label>\n                Banker:\n                <input type=\"checkbox\">\n            </label>\n        </td>\n    </tr>\n</template>\n\n<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Accounts</h3>\n    <div class=\"content\">\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\n        <p>For the following special searches, you cannot use spaces.</p>\n        <ul>\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\n        </ul>\n    </div>\n\n    <br>\n\n    <div class=\"columns\">\n        <div class=\"column\">\n            <input class=\"input\" name=\"search\" placeholder=\"Enter a name...\" value=\"is:banker\">\n        </div>\n        <div class=\"column is-narrow\">\n            <button class=\"button is-danger\">Delete accounts</button>\n        </div>\n    </div>\n\n    <span class=\"has-text-weight-bold\">Sort:</span>\n    <div class=\"control\">\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_d\" checked> Balance (most first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_a\"> Balance (least first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_d\"> Last daily award (recent first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_a\"> Last daily award (old first)\n        </label>\n    </div>\n\n    <br>\n\n    <table class=\"table is-fullwidth is-striped\">\n        <thead>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </thead>\n        <tfoot>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </tfoot>\n        <tbody>\n\n        </tbody>\n    </table>\n</div>\n";
 
     var settingsHTML = "<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">General</h3>\n        <label>Currency Name:</label>\n        <input class=\"input\">\n\n    <h3 class=\"title\">Responses - Commands</h3>\n        <label>/CHECK:</label>\n        <input class=\"input\" data-msg-key=\"check\">\n        <label>/TRANSFER:</label>\n        <input class=\"input\" data-msg-key=\"transfer\">\n        <label>/ADD:</label>\n        <input class=\"input\" data-msg-key=\"add\">\n        <label>/ADDONLINE:</label>\n        <input class=\"input\" data-msg-key=\"online\">\n        <label>/ADDDAILY - Added:</label>\n        <input class=\"input\" data-msg-key=\"daily_yes\">\n        <label>/ADDDAILY - Already added:</label>\n        <input class=\"input\" data-msg-key=\"daily_no\">\n        <label>/LASTDAILY:</label>\n        <input class=\"input\" data-msg-key=\"last_daily\">\n        <label>/REMOVE:</label>\n        <input class=\"input\" data-msg-key=\"remove\">\n        <label>/BANKER - Added:</label>\n        <input class=\"input\" data-msg-key=\"banker_yes\">\n        <label>/BANKER - Already on list:</label>\n        <input class=\"input\" data-msg-key=\"banker_on_list_already\">\n        <label>/UNBANKER - Removed:</label>\n        <input class=\"input\" data-msg-key=\"banker_no\">\n        <label>/UNBANKER - Not a banker:</label>\n        <input class=\"input\" data-msg-key=\"banker_not_on_list\">\n\n    <h3 class=\"title\">Responses - Errors</h3>\n        <label>Account does not exist:</label>\n        <input class=\"input\" data-msg-key=\"error_no_account\">\n        <label>Account limit reached:</label>\n        <input class=\"input\" data-msg-key=\"error_limit_reached\">\n        <label>Insufficient funds:</label>\n        <input class=\"input\" data-msg-key=\"error_funds\">\n\n    <br>\n    <br>\n</div>\n";
 
@@ -74,15 +74,7 @@
             const getSortType = () => {
                 return this.accountsTab.querySelector('[name=sort]:checked').value;
             };
-            // Searching for a single name
-            //tslint:disable-next-line
-            const checkNames = () => {
-                // Update bankers
-                const rows = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'));
-                for (const row of rows) {
-                    const banker = row.querySelector('input[type=checkbox]').checked;
-                    this.bankers.setBanker(row.getAttribute('account_name'), banker);
-                }
+            const rebuildAccounts = () => {
                 const name = input.value.toLocaleUpperCase().trim();
                 let accountFilter = (account) => account.name.includes(name);
                 if (name === '') {
@@ -93,7 +85,7 @@
                     accountFilter = account => bankers.includes(account.name);
                 }
                 else if (/balance:[<>]?\d+/i.test(name)) {
-                    const result = name.match(/(\d+)/);
+                    const result = name.match(/balance:[<>]?(\d+)/);
                     const amount = result ? +result[1] : 0;
                     if (name.includes('<')) {
                         accountFilter = account => account.balance < amount;
@@ -141,8 +133,41 @@
                 }
                 showAccounts(accounts);
             };
-            input.addEventListener('input', debounce(checkNames, 300));
-            this.accountsTab.addEventListener('change', checkNames);
+            let ignoreEvents = false;
+            const userEdit = () => {
+                ignoreEvents = true;
+                for (const row of Array.from(this.accountsTab.querySelectorAll('tr[account_name]'))) {
+                    const banker = row.querySelector('input[type=checkbox]').checked;
+                    this.bankers.setBanker(row.getAttribute('account_name'), banker);
+                    this.accounts.setBalance(row.getAttribute('account_name'), +row.querySelector('input').value);
+                }
+                ignoreEvents = false;
+            };
+            this.accounts.on('change', name => {
+                if (ignoreEvents)
+                    return;
+                const row = this.accountsTab.querySelector(`[account_name="${name}"]`);
+                if (row) {
+                    row.querySelector('input[type=number]').value = this.accounts.getBalance(name) + '';
+                }
+            });
+            this.bankers.on('change', name => {
+                if (ignoreEvents)
+                    return;
+                const row = this.accountsTab.querySelector(`[account_name="${name}"]`);
+                if (row) {
+                    row.querySelector('input[type=checkbox]').checked = this.bankers.isBanker(name);
+                }
+            });
+            input.addEventListener('input', debounce(rebuildAccounts, 300));
+            this.accountsTab.querySelectorAll('input[name=sort]').forEach(el => el.addEventListener('input', rebuildAccounts));
+            this.accountsTab.addEventListener('change', ev => {
+                if (!(ev.target instanceof HTMLElement))
+                    return;
+                if (ev.target.matches('[name=sort]') || ev.target.matches('[name=search]'))
+                    return;
+                userEdit();
+            });
             // Deleting accounts
             this.accountsTab.querySelector('button.is-danger').addEventListener('click', () => {
                 this.ui.alert('Are you sure? This will delete all accounts currently shown on the page.', [{ text: 'Delete', style: 'is-danger' }, 'Cancel'], response => {
@@ -151,7 +176,7 @@
                     const names = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'))
                         .map(tr => tr.getAttribute('account_name'));
                     this.accounts.removeAccounts(names);
-                    checkNames();
+                    rebuildAccounts();
                 });
             });
             // Making accounts banker
@@ -162,7 +187,7 @@
                     this.bankers.setBanker(row.getAttribute('account_name') || '', target.checked);
                 }
             });
-            checkNames();
+            rebuildAccounts();
         }
         initSettingsTab() {
             this.settingsTab = this.ui.addTab('Settings', 'banking');
@@ -184,8 +209,60 @@
         }
     }
 
-    class AccountManager {
+    /**
+     * Simple, type safe, event emitter class.
+     *
+     * @example
+     * ```ts
+     * const x = new EventEmitter<{ a: [string] }>()
+     * x.on('a', a => a.repeat(123)) // ok
+     * x.on('b', console.log) // error, 'b' is not assignable to 'a'
+     * const y = new EventEmitter<{ a: [string]; [k: string]: unknown[] }>()
+     * y.on('a', a => a.repeat(123)) // ok
+     * y.on('b', (...args: unknown[]) => console.log(...args)) // ok, any unknown events will contain an unknown number of arguments.
+     * ```
+     */
+    class EventEmitter {
+        constructor() {
+            this.listeners = new Map();
+        }
+        /**
+         * Starts listening to an event.
+         * @param event the event to listen to.
+         * @param listener function to be called when an this event is emitted.
+         */
+        on(event, listener) {
+            const list = (this.listeners.get(event) || []).slice();
+            list.push(listener);
+            this.listeners.set(event, list);
+        }
+        /**
+         * Stops listening to an event.
+         * @param event the event to stop listening to.
+         * @param listener the function to remove from the listener array.
+         */
+        off(event, listener) {
+            const list = this.listeners.get(event) || [];
+            const index = list.indexOf(listener);
+            if (index !== -1) {
+                list.splice(index, 1);
+            }
+        }
+        /**
+         * Emits an event to all currently subscribed listeners.
+         * @param event the event to emit.
+         * @param args any arguments required for the event.
+         */
+        emit(event, ...args) {
+            for (const listener of (this.listeners.get(event) || []).slice()) {
+                listener(...args);
+            }
+        }
+    }
+
+    class AccountManager extends EventEmitter {
         constructor(storage, world) {
+            super();
             this.storage = storage;
             this.world = world;
             this.id = 'accounts';
@@ -199,6 +276,9 @@
             this.withdraw = (name, amount) => {
                 this.checkWithdraw(name, amount);
                 this.updateAccount(name, { balance: this.getBalance(name) - amount });
+            };
+            this.setBalance = (name, amount) => {
+                this.updateAccount(name, { balance: Math.max(amount, 0) });
             };
             this.transfer = (from, to, amount) => {
                 this.checkDeposit(to, amount);
@@ -245,6 +325,7 @@
             const stored = this.getAccounts();
             stored[key] = Object.assign({}, stored[key], info);
             this.storage.set(this.id, stored);
+            this.emit('change', key);
         }
         removeAccounts(names) {
             const stored = this.getAccounts();
@@ -339,8 +420,9 @@
         }
     }
 
-    class BankerManager {
+    class BankerManager extends EventEmitter {
         constructor(storage) {
+            super();
             this.storage = storage;
             this.id = 'bankers';
             this.default = [];
@@ -352,13 +434,18 @@
             name = name.toLocaleUpperCase();
             const bankers = this.getBankers();
             const index = bankers.indexOf(name);
+            let changed = false;
             if (isBanker && index === -1) {
                 bankers.push(name);
+                changed = true;
             }
             else if (!isBanker && index !== -1) {
                 bankers.splice(index, 1);
+                changed = true;
             }
             this.storage.set(this.id, bankers);
+            if (changed)
+                this.emit('change', name);
         }
         getBankers() {
             return this.storage.get(this.id, []).filter(Boolean);

@@ -81,16 +81,7 @@ export class BankingTab {
             return (<HTMLInputElement>this.accountsTab.querySelector('[name=sort]:checked')).value as any;
         };
 
-        // Searching for a single name
-        //tslint:disable-next-line
-        const checkNames = () => {
-            // Update bankers
-            const rows = Array.from(this.accountsTab.querySelectorAll('tr[account_name]'));
-            for (const row of rows) {
-                const banker = row.querySelector<HTMLInputElement>('input[type=checkbox]')!.checked;
-                this.bankers.setBanker(row.getAttribute('account_name')!, banker);
-            }
-
+        const rebuildAccounts = () => {
             const name = input.value.toLocaleUpperCase().trim();
             let accountFilter = (account: AccountArrayElement) => account.name.includes(name);
 
@@ -100,7 +91,7 @@ export class BankingTab {
                 const bankers = this.bankers.getBankers();
                 accountFilter = account => bankers.includes(account.name);
             } else if (/balance:[<>]?\d+/i.test(name)) {
-                const result = name.match(/(\d+)/)!;
+                const result = name.match(/balance:[<>]?(\d+)/)!;
                 const amount = result ? +result[1] : 0;
                 if (name.includes('<')) {
                     accountFilter = account => account.balance < amount;
@@ -148,8 +139,39 @@ export class BankingTab {
             showAccounts(accounts);
         };
 
-        input.addEventListener('input', debounce(checkNames, 300));
-        this.accountsTab.addEventListener('change', checkNames);
+        let ignoreEvents = false;
+        const userEdit = () => {
+            ignoreEvents = true;
+            for (const row of Array.from(this.accountsTab.querySelectorAll('tr[account_name]'))) {
+                const banker = row.querySelector<HTMLInputElement>('input[type=checkbox]')!.checked;
+                this.bankers.setBanker(row.getAttribute('account_name')!, banker);
+                this.accounts.setBalance(row.getAttribute('account_name')!, +row.querySelector('input')!.value);
+            }
+            ignoreEvents = false;
+        };
+
+        this.accounts.on('change', name => {
+            if (ignoreEvents) return;
+            const row = this.accountsTab.querySelector(`[account_name="${name}"]`);
+            if (row) {
+                row.querySelector<HTMLInputElement>('input[type=number]')!.value = this.accounts.getBalance(name) + '';
+            }
+        });
+        this.bankers.on('change', name => {
+            if (ignoreEvents) return;
+            const row = this.accountsTab.querySelector(`[account_name="${name}"]`);
+            if (row) {
+                row.querySelector<HTMLInputElement>('input[type=checkbox]')!.checked = this.bankers.isBanker(name);
+            }
+        });
+
+        input.addEventListener('input', debounce(rebuildAccounts, 300));
+        this.accountsTab.querySelectorAll('input[name=sort]').forEach(el => el.addEventListener('input', rebuildAccounts));
+        this.accountsTab.addEventListener('change', ev => {
+            if (!(ev.target instanceof HTMLElement)) return;
+            if (ev.target.matches('[name=sort]') || ev.target.matches('[name=search]')) return;
+            userEdit();
+        });
 
         // Deleting accounts
         this.accountsTab.querySelector('button.is-danger')!.addEventListener('click', () => {
@@ -162,7 +184,7 @@ export class BankingTab {
                         .map(tr => tr.getAttribute('account_name')!);
 
                     this.accounts.removeAccounts(names);
-                    checkNames();
+                    rebuildAccounts();
                 }
             );
         });
@@ -176,7 +198,7 @@ export class BankingTab {
             }
         });
 
-        checkNames();
+        rebuildAccounts();
     }
 
     initSettingsTab() {
