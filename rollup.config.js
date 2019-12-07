@@ -1,4 +1,5 @@
-import string from 'rollup-plugin-string'
+//@ts-check
+import { string } from 'rollup-plugin-string'
 import typescript from 'rollup-plugin-typescript2'
 
 export default {

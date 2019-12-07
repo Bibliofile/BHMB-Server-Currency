@@ -2,9 +2,9 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('@bhmb/bot')) :
     typeof define === 'function' && define.amd ? define(['@bhmb/bot'], factory) :
     (global = global || self, factory(global['@bhmb/bot']));
-}(this, function (bot) { 'use strict';
+}(this, (function (bot) { 'use strict';
 
-    var commandsHTML = "<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Commands</h3>\n    <p>The following commands have been added to your world.</p>\n\n    <ul style=\"padding-left: 1.5em;\">\n        <li>/CHECK - Checks how much currency the user has.</li>\n        <li>/CHECK [name] - (<select class=\"select is-small\" data-perm=\"check\">\n            <option value=\"All\">everyone</option>\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks how much currency [name] has.</li>\n        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>\n        <li>/ADD [amount] [name] - (<select class=\"select is-small\" data-perm=\"add\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account.</li>\n        <li>/ADDSILENT [amount] [name] - (<select class=\"select is-small\" data-perm=\"silent\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\n        <li>/ADDDAILY [amount] [name] - (<select class=\"select is-small\" data-perm=\"daily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\n        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\n        <li>/LASTDAILY [name] - (<select class=\"select is-small\" data-perm=\"lastdaily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks the last time [name] recieved a daily award.</li>\n        <li>/ADDONLINE [amount] - (<select class=\"select is-small\" data-perm=\"online\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to everyone who is online.</li>\n        <li>/REMOVE [amount] [name] - (<select class=\"select is-small\" data-perm=\"remove\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Removes [amount] from [name]&apos;s account.</li>\n        <li>/BANKER [name] or /UNBANKER [name] - (<select class=\"select is-small\" data-perm=\"banker\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds or removes [name] to/from the banker list.</li>\n    </ul>\n\n</div>\n";
+    var commandsHTML = "<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Commands</h3>\n    <p>The following commands have been added to your world.</p>\n\n    <ul style=\"padding-left: 1.5em;\">\n        <li>/CHECK - Checks how much currency the user has.</li>\n        <li>/CHECK [name] - (<select class=\"select is-small\" data-perm=\"check\">\n            <option value=\"All\">everyone</option>\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks how much currency [name] has.</li>\n        <li>/TRANSFER [amount] [to] - Transfers [amount] from the current user's account to the [to] account.</li>\n        <li>/PAY [amount] [to] - Alias of /TRANSFER.</li>\n        <li>/GIVE [amount] [to] - Alias of /TRANSFER.</li>\n        <li>/ADD [amount] [name] - (<select class=\"select is-small\" data-perm=\"add\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account.</li>\n        <li>/ADDSILENT [amount] [name] - (<select class=\"select is-small\" data-perm=\"silent\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Does not send a message on success or failure.</li>\n        <li>/ADDDAILY [amount] [name] - (<select class=\"select is-small\" data-perm=\"daily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to [name]&apos;s account. Can only add to an account once per day.</li>\n        <li>/LASTDAILY - Checks the last time the user recieved a daily award.</li>\n        <li>/LASTDAILY [name] - (<select class=\"select is-small\" data-perm=\"lastdaily\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Checks the last time [name] recieved a daily award.</li>\n        <li>/ADDONLINE [amount] - (<select class=\"select is-small\" data-perm=\"online\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds [amount] to everyone who is online.</li>\n        <li>/REMOVE [amount] [name] - (<select class=\"select is-small\" data-perm=\"remove\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Removes [amount] from [name]&apos;s account.</li>\n        <li>/BANKER [name] or /UNBANKER [name] - (<select class=\"select is-small\" data-perm=\"banker\">\n            <option value=\"Admin\">admin</option>\n            <option value=\"AdminBanker\">admin &amp; banker</option>\n            <option value=\"Banker\">banker</option>\n            <option value=\"Owner\">owner</option>\n        </select>) Adds or removes [name] to/from the banker list.</li>\n    </ul>\n\n</div>\n";
 
     var accountsHTML = "<template>\n    <tr>\n        <td data-for=\"name\"></td>\n        <td>\n            <input type=\"number\" class=\"input is-small\">\n        </td>\n        <td data-for=\"last_daily_award\"></td>\n        <td>\n            <label>\n                Banker:\n                <input type=\"checkbox\">\n            </label>\n        </td>\n    </tr>\n</template>\n\n<div class=\"container is-widescreen\">\n\n    <h3 class=\"title\">Accounts</h3>\n    <div class=\"content\">\n        <p>Use this tab to search for, modify, and delete user accounts. Once deleted, accounts cannot be recovered.</p>\n        <p>For the following special searches, you cannot use spaces.</p>\n        <ul>\n            <li>Use <code>is:banker</code> to search for accounts which are bankers.</li>\n            <li>Use <code>balance:10</code> to search for accounts with a balance equal to 10.</li>\n            <li>Use <code>balance:&lt;10</code> to search for accounts with a balance less than 10</li>\n            <li>Use <code>balance:&gt;10</code> to search for accounts with a balance greater than 10.</li>\n        </ul>\n    </div>\n\n    <br>\n\n    <div class=\"columns\">\n        <div class=\"column\">\n            <input class=\"input\" name=\"search\" placeholder=\"Enter a name...\" value=\"is:banker\">\n        </div>\n        <div class=\"column is-narrow\">\n            <button class=\"button is-danger\">Delete accounts</button>\n        </div>\n    </div>\n\n    <span class=\"has-text-weight-bold\">Sort:</span>\n    <div class=\"control\">\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_d\" checked> Balance (most first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"bal_a\"> Balance (least first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_d\"> Last daily award (recent first)\n        </label>\n        <label class=\"radio\">\n            <input type=\"radio\" name=\"sort\" value=\"daily_a\"> Last daily award (old first)\n        </label>\n    </div>\n\n    <br>\n\n    <table class=\"table is-fullwidth is-striped\">\n        <thead>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </thead>\n        <tfoot>\n            <tr>\n                <th>Name</th>\n                <th>Balance</th>\n                <th>Last Daily</th>\n                <th>Actions</th>\n            </tr>\n        </tfoot>\n        <tbody>\n\n        </tbody>\n    </table>\n</div>\n";
 
@@ -123,8 +123,6 @@
                                 return -1;
                             return a.last_daily_award - b.last_daily_award;
                         });
-                        break;
-                    default:
                         break;
                 }
                 if (accounts.length > 300) {
@@ -323,7 +321,7 @@
         updateAccount(key, info) {
             key = key.toLocaleUpperCase();
             const stored = this.getAccounts();
-            stored[key] = Object.assign({}, stored[key], info);
+            stored[key] = Object.assign(Object.assign({}, stored[key]), info);
             this.storage.set(this.id, stored);
             this.emit('change', key);
         }
@@ -378,7 +376,7 @@
             return Object.keys(this.defaults);
         }
         getPerms() {
-            return Object.assign({}, this.defaults, this.storage.get(this.id, this.defaults));
+            return Object.assign(Object.assign({}, this.defaults), this.storage.get(this.id, this.defaults));
         }
     }
 
@@ -416,7 +414,7 @@
             return Object.keys(this.defaults);
         }
         getMessages() {
-            return Object.assign({}, this.defaults, this.storage.get(this.id, this.defaults));
+            return Object.assign(Object.assign({}, this.defaults), this.storage.get(this.id, this.defaults));
         }
     }
 
@@ -537,6 +535,8 @@
                 currency: getCurrencyName(),
             });
         });
+        listeners.set('pay', listeners.get('transfer'));
+        listeners.set('give', listeners.get('transfer'));
         listeners.set('add', (player, args) => {
             const parts = args.match(/([1-9]\d*) (.+)/);
             if (!parts)
@@ -726,5 +726,5 @@
         };
     });
 
-}));
+})));
 //# sourceMappingURL=bundle.js.map

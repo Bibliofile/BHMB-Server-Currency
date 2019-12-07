@@ -108,6 +108,9 @@ MessageBot.registerExtension('bibliofile/banking', function(ex, world) {
         });
     });
 
+    listeners.set('pay', listeners.get('transfer')!)
+    listeners.set('give', listeners.get('transfer')!)
+
     listeners.set('add', (player, args) => {
         const parts = args.match(/([1-9]\d*) (.+)/);
         if (!parts) return;
