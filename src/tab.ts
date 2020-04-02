@@ -85,21 +85,41 @@ export class BankingTab {
             const name = input.value.toLocaleUpperCase().trim();
             let accountFilter = (account: AccountArrayElement) => account.name.includes(name);
 
+            const parts = name.split(/\s+/);
+            const checks: Array<(account: AccountArrayElement) => boolean> = [];
+
             if (name === '') {
                 accountFilter = () => true;
-            } else if (name === 'IS:BANKER') {
-                const bankers = this.bankers.getBankers();
-                accountFilter = account => bankers.includes(account.name);
-            } else if (/balance:[<>]?\d+/i.test(name)) {
-                const result = name.match(/balance:[<>]?(\d+)/)!;
-                const amount = result ? +result[1] : 0;
-                if (name.includes('<')) {
-                    accountFilter = account => account.balance < amount;
-                } else if (name.includes('>')) {
-                    accountFilter = account => account.balance > amount;
-                } else {
-                    accountFilter = account => account.balance === amount;
+            } else if (parts.some(part => part.startsWith('IS:') || part.startsWith('BALANCE:') || part.startsWith('DAILY:'))) {
+                for (const part of parts) {
+                    if (part === 'IS:BANKER') {
+                        const bankers = this.bankers.getBankers();
+                        checks.push(account => bankers.includes(account.name));
+                    } else if (/balance:[<>]?\d+/i.test(part)) {
+                        const result = part.match(/balance:[<>]?(\d+)/i);
+                        const amount = result ? +result[1] : 0;
+                        if (part.includes('<')) {
+                            checks.push(account => account.balance < amount);
+                        } else if (part.includes('>')) {
+                            checks.push(account => account.balance > amount);
+                        } else {
+                            checks.push(account => account.balance === amount);
+                        }
+                    } else if (/daily:-?\d+/i.test(part)) {
+                        const target = part.substr('daily:'.length)
+                        const days = parseInt(target, 10);
+                        const ms = days * 24 * 60 * 60 * 1000;
+                        if (days < 0) {
+                            checks.push(account => (account.last_daily_award || 0) - ms > Date.now());
+                        } else {
+                            checks.push(account => (account.last_daily_award || 0) < Date.now() - ms);
+                        }
+                    } else {
+                        checks.push(account => account.name.includes(part));
+                    }
                 }
+
+                accountFilter = account => checks.every(check => check(account));
             }
 
             const accounts = this.accounts.getAll().filter(accountFilter);
